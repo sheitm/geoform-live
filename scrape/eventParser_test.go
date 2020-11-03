@@ -1,8 +1,10 @@
-package parse
+package scrape
 
 import (
+	"github.com/sheitm/ofever/contracts"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func Test_eventTableParser_parse(t *testing.T) {
@@ -10,36 +12,13 @@ func Test_eventTableParser_parse(t *testing.T) {
 	parser := &eventTableParser{}
 
 	// Act
-	results, err := parser.parse(eventResults)
+	results, err := parser.parse(standardHeaders, eventResults)
 
 	// Assert
 	if err != nil {
 		t.Errorf("unexpected error, %v", err)
 	}
 	_ = results
-}
-
-func Test_getWordIndexes(t *testing.T) {
-	type args struct {
-		s string
-	}
-	tests := []struct {
-		name string
-		args args
-		want []int
-	}{
-		{"1", args{s:"x  y"}, []int{0, 3}},
-		{"2", args{s:"19    Heitmann, Ståle               Fossum IF                 0:58:27 +  14:41      143.32"}, []int{0, 6, 37, 63, 74, 85}},
-		{"3", args{s:"28    Vister, Hanne Maria                                     1:05:07 +  21:21      139.71"}, []int{0, 6, 63, 74, 85}},
-		{"4", args{s:"21    Fløystad, Jostein Bø          Privat                    1:00:52 +  17:06      142.01"}, []int{0, 6, 37, 63, 74, 85}},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := getWordIndexes(tt.args.s); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getWordIndexes() = %v, want %v", got, tt.want)
-			}
-		})
-	}
 }
 
 func Test_getWords(t *testing.T) {
@@ -59,10 +38,134 @@ func Test_getWords(t *testing.T) {
 	}
 }
 
+func Test_getResultFromLine(t *testing.T) {
+	type args struct {
+		line string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *contracts.Result
+		wantErr bool
+	}{
+		{
+			name:    "Kostylev",
+			args:    args{line:"1    Kostylev, Jegor               Mora                      0:43:46 +  00:00      151.28"},
+			want:    &contracts.Result{
+				Placement:       1,
+				Disqualified:    false,
+				Athlete:         "Kostylev, Jegor",
+				Club:            "Mora",
+				ElapsedTime:     43*time.Minute + 46*time.Second,
+				Points:          151.28,
+				MissingControls: 0,
+			},
+			wantErr: false,
+		},
+		{
+			name: "Blom-hagen",
+			args: args{line: "4    Blom-hagen, Torbjørn          Fossum IF                 0:47:57 +  04:11      149.01"},
+			want:    &contracts.Result{
+				Placement:       4,
+				Disqualified:    false,
+				Athlete:         "Blom-hagen, Torbjørn",
+				Club:            "Fossum IF",
+				ElapsedTime:     47*time.Minute + 57*time.Second,
+				Points:          149.01,
+				MissingControls: 0,
+			},
+			wantErr: false,
+		},
+		{
+			name: "Vister",
+			args: args{line: "28    Vister, Hanne Maria                                     1:05:07 +  21:21      139.71"},
+			want:    &contracts.Result{
+				Placement:       28,
+				Disqualified:    false,
+				Athlete:         "Vister, Hanne Maria",
+				Club:            "",
+				ElapsedTime:     1*time.Hour + 5*time.Minute + 7*time.Second,
+				Points:          139.71,
+				MissingControls: 0,
+			},
+			wantErr: false,
+		},
+		{
+			name: "Hjelm",
+			args: args{line: "DSQ   Hjelm, Morten                 VBIL                      0:59:12  (-1 poster)  95.00"},
+			want:    &contracts.Result{
+				Placement:       0,
+				Disqualified:    true,
+				Athlete:         "Hjelm, Morten",
+				Club:            "VBIL",
+				ElapsedTime:     59*time.Minute + 12*time.Second,
+				Points:          95.0,
+				MissingControls: 1,
+			},
+			wantErr: false,
+		},
+		{
+			name: "Feiring",
+			args: args{line: "      Feiring, Hege                 IL Tyrving                DELTATT               50.00"},
+			want:    &contracts.Result{
+				Placement:       0,
+				Disqualified:    true,
+				Athlete:         "Feiring, Hege",
+				Club:            "IL Tyrving",
+				ElapsedTime:     0,
+				Points:          50.0,
+				MissingControls: 0,
+			},
+			wantErr: false,
+		},
+		{
+			name: "Hobæk",
+			args: args{line: "65    Hobæk, Thor                   Gassecure BIL             2:03:41 +1:19:33      108.99"},
+			want:    &contracts.Result{
+				Placement:       65,
+				Disqualified:    false,
+				Athlete:         "Hobæk, Thor",
+				Club:            "Gassecure BIL",
+				ElapsedTime:     2*time.Hour + 3 * time.Minute + 41 * time.Second,
+				Points:          108.99,
+				MissingControls: 0,
+			},
+			wantErr: false,
+		},
+		{
+			name: "Blom",
+			args: args{line: "26    Blom, Richard                 FBI - Forskningsbedriftenes bedriftsidrettslag0:48:07 +  15:10      128.47"},
+			want:    &contracts.Result{
+				Placement:       26,
+				Disqualified:    false,
+				Athlete:         "Blom, Richard",
+				Club:            "FBI - Forskningsbedriftenes bedriftsidrettslag",
+				ElapsedTime:     48 * time.Minute + 7 * time.Second,
+				Points:          128.47,
+				MissingControls: 0,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getResultFromLine(tt.args.line)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getResultFromLine() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getResultFromLine() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 /////////////////////////////////
 /////////////////////////////////
 
 const (
+	standardHeaders = `Plass Navn                          Klubb                     Tid                   Poeng`
 	eventResults = `
  1    Kostylev, Jegor               Mora                      0:43:46 +  00:00      151.28
  2    Vogelsang, Christian          Nydalens SK               0:44:08 +  00:22      151.08
