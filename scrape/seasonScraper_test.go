@@ -63,6 +63,10 @@ func Test_startSeason_success(t *testing.T) {
 		t.Errorf("unexpected number of results, got %d", len(fetch.Results))
 	}
 
+	if fetch.Year != 2020 {
+		t.Errorf("unexpected year, got %d", fetch.Year)
+	}
+
 	okCount := 0
 	failedCount := 0
 	for _, result := range fetch.Results {

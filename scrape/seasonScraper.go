@@ -18,7 +18,10 @@ func StartSeason(url string, year int, resultChan chan<- *SeasonFetch) {
 }
 
 func startSeason(url string, year int, resultChan chan<- *SeasonFetch, client *http.Client) {
-	scraper := &seasonScraper{client: client}
+	scraper := &seasonScraper{
+		client: client,
+		year:   year,
+	}
 	go scraper.scrape(url, resultChan)
 }
 
@@ -28,7 +31,11 @@ type seasonScraper struct {
 }
 
 func (s *seasonScraper) scrape(url string, resultChan chan<- *SeasonFetch) {
-	fetch := &SeasonFetch{URL: url}
+	fetch := &SeasonFetch{
+		URL:  url,
+		Year: s.year,
+	}
+
 	rows, err := s.getEventRows(url)
 	if err != nil {
 		fetch.Error = err
