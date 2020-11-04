@@ -1,11 +1,23 @@
 package scrape
 
 import (
+	"fmt"
 	"github.com/sheitm/ofever/contracts"
 	"golang.org/x/net/html"
 	"net/http"
 	"strings"
 )
+
+func startEventScrape(url string, resultChan chan<- *Result, client *http.Client) {
+	go func(url string, resultChan chan<- *Result, client *http.Client) {
+		res := &Result{URL: url}
+		scraper := &eventScraper{client: &http.Client{}}
+		event, err := scraper.Scrape(url)
+		res.Event = event
+		res.Error = err
+		resultChan <- res
+	}(url, resultChan, client)
+}
 
 type eventScraper struct {
 	client *http.Client
@@ -15,6 +27,9 @@ func (s *eventScraper) Scrape(url string) (*contracts.Event, error) {
 	resp, err := s.client.Get(url)
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode > 299 {
+		return nil, fmt.Errorf("%s", resp.Status)
 	}
 
 	defer resp.Body.Close()

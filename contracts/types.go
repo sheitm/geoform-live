@@ -2,6 +2,8 @@ package contracts
 
 import "time"
 
+
+
 // Result is a structured version of a single line in a results table for a single event. With "Raw" we mean that
 // references to the entities for athlete and club are just texts and not references to objects.
 type Result struct {

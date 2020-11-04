@@ -6,6 +6,28 @@ import (
 	"testing"
 )
 
+func Test_eventScraper_Scrape_404(t *testing.T) {
+	// Arrange
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.WriteHeader(404)
+	}))
+	defer server.Close()
+
+	url := server.URL + "/res2020-10-24.html"
+	scraper := eventScraper{client: server.Client()}
+
+	// Act
+	event, err := scraper.Scrape(url)
+
+	// Assert
+	if event != nil {
+		t.Error("expected nil event")
+	}
+	if err == nil {
+		t.Error("expected error, got none")
+	}
+}
+
 func Test_eventScraper_Scrape(t *testing.T) {
 	// Arrange
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
