@@ -6,22 +6,12 @@ import (
 
 func main(){
 
-	eventChan := make(chan *scrape.Result)
-	doneChan := make(chan error)
+	seasonChan := make(chan *scrape.SeasonFetch)
 
-	scrape.StartSeason("https://ilgeoform.no/rankinglop/", 2020, eventChan, doneChan)
+	scrape.StartSeason("https://ilgeoform.no/rankinglop/", 2020, seasonChan)
 
-	var results []*scrape.Result
+	season := <- seasonChan
 
-	go func(ec <-chan *scrape.Result) {
-		for  {
-			r := <- ec
-			results = append(results, r)
-		}
-	}(eventChan)
-
-	<- doneChan
-
-	x := 99
+	x := season
 	_ = x
 }

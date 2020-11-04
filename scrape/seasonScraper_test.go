@@ -17,7 +17,7 @@ func Test_startSeason_statusCode500(t *testing.T) {
 	resultChan := make(chan *SeasonFetch)
 
 	// Act
-	startSeason(url, resultChan, server.Client())
+	startSeason(url, 2020, resultChan, server.Client())
 
 	fetch := <- resultChan
 

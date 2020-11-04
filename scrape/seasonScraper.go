@@ -197,7 +197,7 @@ func (r *tableRow) date() time.Time {
 		if err != nil {
 			return time.Time{}
 		}
-		m, err := strconv.Atoi(arr[0])
+		m, err := strconv.Atoi(arr[1])
 		if err != nil {
 			return time.Time{}
 		}
