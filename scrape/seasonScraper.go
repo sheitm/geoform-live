@@ -4,28 +4,32 @@ import (
 	"fmt"
 	"golang.org/x/net/html"
 	"net/http"
+	"strconv"
+	"strings"
 	"sync"
+	"time"
 )
 
 // StartSeason scrapes all events that can be found via the given url which is assumed to be to a page with references
 // to all events in a table.
-func StartSeason(url string, resultChan chan<- *SeasonFetch) {
+func StartSeason(url string, year int, resultChan chan<- *SeasonFetch) {
 	client := &http.Client{}
-	startSeason(url, resultChan, client)
+	startSeason(url, year, resultChan, client)
 }
 
-func startSeason(url string, resultChan chan<- *SeasonFetch, client *http.Client) {
+func startSeason(url string, year int, resultChan chan<- *SeasonFetch, client *http.Client) {
 	scraper := &seasonScraper{client: client}
 	go scraper.scrape(url, resultChan)
 }
 
 type seasonScraper struct {
 	client *http.Client
+	year   int
 }
 
 func (s *seasonScraper) scrape(url string, resultChan chan<- *SeasonFetch) {
 	fetch := &SeasonFetch{URL: url}
-	eventURLs, err := s.getEventsURLs(url)
+	rows, err := s.getEventRows(url)
 	if err != nil {
 		fetch.Error = err
 		resultChan <- fetch
@@ -33,12 +37,12 @@ func (s *seasonScraper) scrape(url string, resultChan chan<- *SeasonFetch) {
 	}
 
 	internalResultChan := make(chan *Result)
-	for _, eventURL := range eventURLs {
-		startEventScrape(eventURL, internalResultChan, s.client)
+	for _, row := range rows {
+		startEventScrape(row, internalResultChan, s.client)
 	}
 
 	wg := &sync.WaitGroup{}
-	wg.Add(len(eventURLs))
+	wg.Add(len(rows))
 
 	var results []*Result
 
@@ -55,7 +59,7 @@ func (s *seasonScraper) scrape(url string, resultChan chan<- *SeasonFetch) {
 	resultChan <- fetch
 }
 
-func (s *seasonScraper) getEventsURLs(url string) ([]string, error) {
+func (s *seasonScraper) getEventRows(url string) ([]*tableRow, error) {
 	resp, err := s.client.Get(url)
 	if err != nil {
 		return nil, err
@@ -70,13 +74,19 @@ func (s *seasonScraper) getEventsURLs(url string) ([]string, error) {
 	}
 
 	var currentRow *tableRow
+	var headers *tableRow
 	var rows []*tableRow
 
 	var f func(*html.Node)
 	f = func(n *html.Node){
 		if n.Type == html.ElementNode && n.Data == "tr" {
-			currentRow = newTableRow()
-			rows = append(rows, currentRow)
+			currentRow = newTableRow(url, s.year)
+			if headers == nil {
+				headers = currentRow
+			} else {
+				rows = append(rows, currentRow)
+			}
+
 		}
 		if n.Type == html.ElementNode && n.Data == "td" {
 			currentRow.add(n)
@@ -87,35 +97,115 @@ func (s *seasonScraper) getEventsURLs(url string) ([]string, error) {
 	}
 	f(doc)
 
-	var links []string
+	var validRows []*tableRow
 	for _, row := range rows {
-		eventURL := row.eventURL()
-		if eventURL != "" {
-			address := url + eventURL
-			links = append(links, address)
+		if row.valid() {
+			validRows = append(validRows, row)
 		}
 	}
 
-	return links, nil
+	return validRows, nil
 }
 
-func newTableRow() *tableRow {
-	return &tableRow{values: map[int]cellValue{}}
+func newTableRow(baseURL string, year int) *tableRow {
+	return &tableRow{
+		baseURL: baseURL,
+		values:  map[int]cellValue{},
+		year:    year,
+	}
 }
 
 type tableRow struct {
-	values map[int]cellValue
+	baseURL string
+	values  map[int]cellValue
+	year    int
+}
+
+func (r *tableRow) valid() bool {
+	if len(r.values) < 9 {
+		return false
+	}
+	return r.rawEventURL() != ""
+}
+
+func (r *tableRow) number() int {
+	if c, ok := r.values[0]; ok {
+		nr, err := strconv.Atoi(c.text)
+		if err != nil {
+			return 0
+		}
+		return nr
+	}
+	return 0
+}
+
+func (r *tableRow) rawEventURL() string {
+	index := len(r.values) - 3
+	if c, ok := r.values[index]; ok {
+		return c.value
+	}
+	return ""
 }
 
 func (r *tableRow) eventURL() string {
-	for _, value := range r.values {
-		if value.typ == "a" && value.text == "Resultater" {
-			return value.value
-		}
-	}
+	return r.baseURL + "/" + r.rawEventURL()
+}
 
+func (r *tableRow) urlInvite() string {
+	if c, ok := r.values[3]; ok {
+		return c.value
+	}
 	return ""
 }
+
+func (r *tableRow) place() string {
+	if c, ok := r.values[3]; ok {
+		return c.text
+	}
+	return ""
+}
+
+func (r *tableRow) urlLiveLox() string {
+	index := len(r.values) - 2
+	if c, ok := r.values[index]; ok {
+		return c.value
+	}
+	return ""
+}
+
+func (r *tableRow) weekDay() string {
+	if c, ok := r.values[2]; ok {
+		return c.value
+	}
+	return ""
+}
+
+func (r *tableRow) organizer() string {
+	if c, ok := r.values[5]; ok {
+		return c.value
+	}
+	return ""
+}
+
+func (r *tableRow) date() time.Time {
+	if c, ok := r.values[1]; ok {
+		arr := strings.Split(c.value, ".")
+		if len(arr) != 2 {
+			return time.Time{}
+		}
+		d, err := strconv.Atoi(arr[0])
+		if err != nil {
+			return time.Time{}
+		}
+		m, err := strconv.Atoi(arr[0])
+		if err != nil {
+			return time.Time{}
+		}
+		return time.Date(r.year, time.Month(m), d, 0, 0, 0, 0, time.UTC)
+	}
+	return time.Time{}
+}
+
 
 func (r *tableRow) add(n *html.Node) {
 	c := n.FirstChild
@@ -142,6 +232,13 @@ func (r *tableRow) add(n *html.Node) {
 				typ:   "a",
 				text:  v,
 				value: href,
+			}
+		case "strong":
+			v := c.FirstChild.Data
+			cell = cellValue{
+				typ:   "strong",
+				text:  v,
+				value: v,
 			}
 		default:
 			v := c.Data

@@ -2,6 +2,7 @@ package scrape
 
 import "github.com/sheitm/ofever/contracts"
 
+// SeasonFetch the results after having attempted to get all events for a season.
 type SeasonFetch struct {
 	URL string
 

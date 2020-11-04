@@ -8,19 +8,24 @@ import (
 	"strings"
 )
 
-func startEventScrape(url string, resultChan chan<- *Result, client *http.Client) {
-	go func(url string, resultChan chan<- *Result, client *http.Client) {
+func startEventScrape(row *tableRow,  resultChan chan<- *Result, client *http.Client) {
+	go func(row *tableRow, resultChan chan<- *Result, client *http.Client) {
+		url := row.eventURL()
 		res := &Result{URL: url}
-		scraper := &eventScraper{client: &http.Client{}}
+		scraper := &eventScraper{
+			client: &http.Client{},
+			row:    row,
+		}
 		event, err := scraper.Scrape(url)
 		res.Event = event
 		res.Error = err
 		resultChan <- res
-	}(url, resultChan, client)
+	}(row, resultChan, client)
 }
 
 type eventScraper struct {
 	client *http.Client
+	row    *tableRow
 }
 
 func (s *eventScraper) Scrape(url string) (*contracts.Event, error) {
@@ -40,7 +45,17 @@ func (s *eventScraper) Scrape(url string) (*contracts.Event, error) {
 		return nil, err
 	}
 
-	event := &contracts.Event{}
+	event := &contracts.Event{
+		URL:        url,
+		Number:     s.row.number(),
+		URLInvite:  s.row.urlInvite(),
+		URLLiveLox: s.row.urlLiveLox(),
+		WeekDay:    s.row.weekDay(),
+		Date:       s.row.date(),
+		Place:      s.row.place(),
+		Organizer:  s.row.organizer(),
+	}
+
 	var nextCourseName string
 	newCourseDetected := false
 
@@ -64,14 +79,15 @@ func (s *eventScraper) Scrape(url string) (*contracts.Event, error) {
 				columns := n.FirstChild.FirstChild.Data
 				resString := n.FirstChild.NextSibling.Data
 				results, err := resultsParser.parse(columns, resString)
+				parserErrorText := ""
 				if err != nil {
-					x := 22
-					_ = x
+					parserErrorText = err.Error()
 				}
 				course := &contracts.Course{
-					Name:    nextCourseName,
-					Info:    "",
-					Results: results,
+					Name:       nextCourseName,
+					Info:       "",
+					Results:    results,
+					ParseError: parserErrorText,
 				}
 				event.Courses = append(event.Courses, course)
 			} else {

@@ -34,11 +34,12 @@ func Test_startSeason_success(t *testing.T) {
 	// Arrange
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		p := req.URL.Path
+		//fmt.Println(p)
 		if  p == "/rankinglop" {
 			rw.Write([]byte(htmlSeasonResponse))
 			return
 		}
-		if p == "/rankinglopres2020-06-17.html" {
+		if p == "/rankinglop/res2020-06-17.html" {
 			rw.Write([]byte(htmlEventResponse))
 			return
 		}
@@ -50,7 +51,7 @@ func Test_startSeason_success(t *testing.T) {
 	resultChan := make(chan *SeasonFetch)
 
 	// Act
-	startSeason(url, resultChan, server.Client())
+	startSeason(url, 2020, resultChan, server.Client())
 
 	fetch := <- resultChan
 

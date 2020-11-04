@@ -9,7 +9,7 @@ func main(){
 	eventChan := make(chan *scrape.Result)
 	doneChan := make(chan error)
 
-	scrape.StartSeason("https://ilgeoform.no/rankinglop/", eventChan, doneChan)
+	scrape.StartSeason("https://ilgeoform.no/rankinglop/", 2020, eventChan, doneChan)
 
 	var results []*scrape.Result
 
