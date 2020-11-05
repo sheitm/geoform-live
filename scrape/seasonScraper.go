@@ -155,7 +155,13 @@ func (r *tableRow) rawEventURL() string {
 }
 
 func (r *tableRow) eventURL() string {
-	return r.baseURL + "/" + r.rawEventURL()
+	b := r.baseURL
+	if strings.Contains(b, ".html") {
+		arr := strings.Split(b, "/")
+		end := (len(b) - len(arr[len(arr)-1])) -1
+		b = b[0:end]
+	}
+	return b + "/" + r.rawEventURL()
 }
 
 func (r *tableRow) urlInvite() string {

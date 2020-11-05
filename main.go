@@ -3,16 +3,19 @@ package main
 import (
 	"github.com/sheitm/ofever/scrape"
 	"github.com/sheitm/ofever/storage"
-	"time"
+	"log"
+	"os"
 )
 
 func main(){
-
+	storageDirectory := os.Getenv("STORAGE_DIRECTORY")
+	if storageDirectory == "" {
+		log.Fatal("environment variable STORAGE_DIRECTORY must be set")
+	}
 	seasonChan := make(chan *scrape.SeasonFetch)
 
-	storage.Start(seasonChan)
+	storage.Start(storageDirectory, seasonChan)
 
-	scrape.StartSeason("https://ilgeoform.no/rankinglop/", 2020, seasonChan)
-
-	<- time.After(1 * time.Minute)
+	// startServer must be last line
+	startServer("2112", seasonChan)
 }

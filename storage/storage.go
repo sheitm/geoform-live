@@ -5,9 +5,10 @@ import (
 	"log"
 )
 
-const folder = `C:\temp\ofever`
+var storageDirectory string
 
-func Start(seasonChan <-chan *scrape.SeasonFetch) {
+func Start(storageFolder string, seasonChan <-chan *scrape.SeasonFetch) {
+	storageDirectory = storageFolder
 	go func(sc <-chan *scrape.SeasonFetch) {
 		for {
 			fetch := <- sc
@@ -22,7 +23,7 @@ func Start(seasonChan <-chan *scrape.SeasonFetch) {
 
 func NewService(year int) Service {
 	return &service{
-		folder: folder,
+		folder: storageDirectory,
 		year:   year,
 	}
 }

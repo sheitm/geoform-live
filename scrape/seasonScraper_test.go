@@ -85,41 +85,77 @@ func Test_startSeason_success(t *testing.T) {
 	}
 }
 
-//func Test_startSeason_4real(t *testing.T) {
-//	// Arrange
-//	url := "https://ilgeoform.no/rankinglop/"
-//	resultChan := make(chan *SeasonFetch)
-//
-//	// Act
-//	startSeason(url, resultChan, &http.Client{})
-//
-//	fetch := <- resultChan
-//
-//	// Assert
-//	if fetch.Error != nil {
-//		t.Errorf("unexpected error, got %v", fetch.Error)
-//	}
-//	if len(fetch.Results) != 24 {
-//		t.Errorf("unexpected number of results, got %d", len(fetch.Results))
-//	}
-//
-//	okCount := 0
-//	failedCount := 0
-//	for _, result := range fetch.Results {
-//		if result.Error != nil {
-//			failedCount++
-//			continue
-//		}
-//		okCount++
-//	}
-//
-//	if okCount != 1 {
-//		t.Errorf("expected 1 ok, got %d", okCount)
-//	}
-//	if failedCount != 23 {
-//		t.Errorf("expected 23 failed, got %d", okCount)
-//	}
-//}
+func Test_tableRow_eventURL(t *testing.T) {
+	type fields struct {
+		baseURL string
+		values  map[int]cellValue
+		year    int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name: "thisYear",
+			fields: fields{
+				baseURL: "https://ilgeoform.no/rankinglop",
+				values:  map[int]cellValue{
+					0: {},
+					1: {},
+					2: {},
+					3: {},
+					4: {},
+					5: {},
+					6: {
+						typ:   "a",
+						text:  "Resultater",
+						value: "res2020-06-17.html",
+					},
+					7: {},
+					8: {},
+				},
+				year:    2020,
+			},
+			want: "https://ilgeoform.no/rankinglop/res2020-06-17.html",
+		},
+		{
+			name: "lastYear",
+			fields: fields{
+				baseURL: "https://ilgeoform.no/rankinglop/index-2019.html",
+				values:  map[int]cellValue{
+					0: {},
+					1: {},
+					2: {},
+					3: {},
+					4: {},
+					5: {},
+					6: {
+						typ:   "a",
+						text:  "Resultater",
+						value: "res2019-05-15.html",
+					},
+					7: {},
+					8: {},
+				},
+				year:    2020,
+			},
+			want: "https://ilgeoform.no/rankinglop/res2019-05-15.html",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &tableRow{
+				baseURL: tt.fields.baseURL,
+				values:  tt.fields.values,
+				year:    tt.fields.year,
+			}
+			if got := r.eventURL(); got != tt.want {
+				t.Errorf("eventURL() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
 const (
 	htmlSeasonResponse = `<html lang="nb"><head><meta charset="utf-8">
@@ -520,3 +556,4 @@ Medlemmer av OSI Orientering (Årets gruppekontingent for OSI Orientering skal v
 
 </body></html>`
 )
+
