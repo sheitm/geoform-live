@@ -20,10 +20,10 @@ type Athlete struct {
 }
 
 type AthleteResult struct {
-	Event        string    `json:"event"`
-	Course       string    `json:"course"`
-	Disqualified bool      `json:"disqualified"`
-	Placement    int       `json:"placement"`
-	ElapsedTime  time.Time `json:"elapsed_time"`
-	Points       float64   `json:"points"`
+	Event        string        `json:"event"`
+	Course       string        `json:"course"`
+	Disqualified bool          `json:"disqualified"`
+	Placement    int           `json:"placement"`
+	ElapsedTime  time.Duration `json:"elapsed_time"`
+	Points       float64       `json:"points"`
 }
