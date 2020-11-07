@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"fmt"
 	"github.com/sheitm/ofever/contracts"
 	"reflect"
 	"testing"
@@ -18,7 +19,84 @@ func Test_eventTableParser_parse(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected error, %v", err)
 	}
-	_ = results
+	if len(results) != 49 {
+		t.Errorf("expected 49 result lines, got %d", len(results))
+	}
+	var result *contracts.Result
+	for _, r := range results {
+		if r.Athlete == "Heir, Morten" {
+			result = r
+			break
+		}
+	}
+
+	if result.Placement != 11 {
+		t.Errorf("unexpected placement, got %d", result.Placement)
+	}
+	if result.Club != "Fossum IF" {
+		t.Errorf("unexpected club, got %s", result.Club)
+	}
+	if result.Points != 145.55 {
+		t.Errorf("unexpected points, got %f", result.Points)
+	}
+	if fmt.Sprintf("%v", result.ElapsedTime) != "54m20s" {
+		t.Errorf("unexpected elapsed time, got %v", result.ElapsedTime)
+	}
+	if result.Disqualified {
+		t.Errorf("did not expect qualified")
+	}
+
+	// DSQ   Sætran, Bjørn Idar            IF Trauma                 0:41:26  (-1 poster)  95.00
+	for _, r := range results {
+		if r.Athlete == "Sætran, Bjørn Idar" {
+			result = r
+			break
+		}
+	}
+
+	if !result.Disqualified {
+		t.Errorf("expected disqualified")
+	}
+	if result.MissingControls != 1 {
+		t.Errorf("expected 1 missing control, got %d", result.MissingControls)
+	}
+}
+
+func Test_eventTableParser_parse_nonstandard2019(t *testing.T) {
+	// Arrange
+	parser := &eventTableParser{}
+
+	// Act
+	results, err := parser.parse(standardHeaders, eventResults2019_5)
+
+	// Assert
+	if err != nil {
+		t.Errorf("unexpected error, %v", err)
+	}
+	if len(results) != 25 {
+		t.Errorf("expected 25 results, got %d", len(results))
+	}
+
+	var result *contracts.Result
+	for _, r := range results {
+		if r.Placement == 1 {
+			result = r
+			break
+		}
+	}
+
+	if result.Athlete != "Grønneberg, Skage" {
+		t.Errorf("unexpected athlete name, got %s", result.Athlete)
+	}
+	if result.Club != "Heming Orientering" {
+		t.Errorf("unexpected club, got %s", result.Club)
+	}
+	if fmt.Sprintf("%v", result.ElapsedTime) != "57m1s" {
+		t.Errorf("unexpected elapsed time, got %v", result.ElapsedTime)
+	}
+	if result.Points != 151.04 {
+		t.Errorf("unexpected points, got %f", result.Points)
+	}
 }
 
 func Test_getWords(t *testing.T) {
@@ -217,5 +295,31 @@ const (
 DSQ   Sætran, Bjørn Idar            IF Trauma                 0:41:26  (-1 poster)  95.00
 DSQ   Hjelm, Morten                 VBIL                      0:59:12  (-1 poster)  95.00
 `
+	eventResults2019_5 = `
+ 1    Grønneberg, Skage             Heming Orientering    0:57:01 +  00:00      151,04
+ 2    Nipen, Thomas                 Bekkelaget            0:57:21 +  00:20      150,90
+ 3    Nipen, Jørgen Mathias         Bækkelaget            1:00:36 +  03:35      149,54
+ 4    Nygård, Svein                 Norges Bank BIL       1:00:52 +  03:51      149,43
+ 5    Svedberg, Johan               Heming Orientering    1:01:40 +  04:39      149,09
+ 6    Fremming, Nils Petter         Heming Orientering    1:03:05 +  06:04      148,49
+ 7    Røberg, Henning               Nittedal OL           1:03:53 +  06:52      148,16
+ 8    Norman, Niklas                IL GeoForm            1:04:25 +  07:24      147,93
+ 9    Systad, Rolv Anders           Lyn Ski               1:05:33 +  08:32      147,46
+10    Bårtveit, Knut                Bø OL                 1:06:54 +  09:53      146,89
+11    Kjølseth, Tore                Lundin                1:07:10 +  10:09      146,78
+12    Helland, Knut                 Østmarka OK           1:07:17 +  10:16      146,73
+13    Heier, Morten                 Fossum IF             1:09:49 +  12:48      145,67
+14    Heir, Marius Borge            NTNUI                 1:11:05 +  14:04      145,13
+15    Zeiner-Gundersen, Richard     Aker Brygge Orientering1:14:15 +  17:14      143,80
+16    Egge, Guttorm                 ILGeoForm             1:17:43 +  20:42      142,35
+17    Heir, Stig                    Asker SK              1:18:01 +  21:00      142,22
+18    Roti, Jarle                   Fossum IF             1:20:44 +  23:43      141,08
+19    Eriksen, Are                  OSI                   1:23:09 +  26:08      140,06
+20    Heitmann, Ståle               Fossum IF             1:26:46 +  29:45      138,54
+21    Messel, Espen                 IL Koll               1:29:47 +  32:46      137,28
+22    Lahlum, Jon                   IL GeoForm            1:31:28 +  34:27      136,57
+23    Syversten, Bjørne             Privat                1:39:00 +  41:59      133,40
+24    Grandum, Øyvind               IL GeoForm            1:49:08 +  52:07      129,15
+DSQ   Vogelsang, Christian          Nydalens SK           0:29:36  (-9 poster)  71,88`
 )
 

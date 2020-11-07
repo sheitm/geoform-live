@@ -17,6 +17,7 @@ const (
 	regexPatternELapsedTimeNormal = `\d{1,2}:\d{2}:\d{2} \+  \d{1,2}:\d{2}` // Ex: 1:21:22 +  37:14
 	regexPatternELapsedTimeLong = `\d{1,2}:\d{2}:\d{2} \+\d{1}:\d{2}:\d{2}` // Ex: 1:46:31 +1:02:23
 	regexPatternPoints = `\d{1,3}\.\d{2}`
+	regexPatternPointsComma = `\d{1,3},\d{2}`
 	regexPatterMissingControls = `\(\-\d{1,2} poster\)`
 	regexPatternMissingControlsDigits = `\d{1,2}`
 	regexPatternClubContamination = `\d:\d{2}:\d{2}\s\+`
@@ -24,6 +25,7 @@ const (
 
 var regexElapsedTime *regexp.Regexp = regexp.MustCompile(regexPatternElapsedTime)
 var regexPoints *regexp.Regexp = regexp.MustCompile(regexPatternPoints)
+var regexPointsComma *regexp.Regexp = regexp.MustCompile(regexPatternPointsComma)
 var regexMissingControls = regexp.MustCompile(regexPatterMissingControls)
 var regexMissingControlsDigits = regexp.MustCompile(regexPatternMissingControlsDigits)
 var regexClubContamination = regexp.MustCompile(regexPatternClubContamination)
@@ -97,7 +99,13 @@ func getResultFromLine(line string) (*contracts.Result, error) {
 func getPoints(s string) (float64, error) {
 	b := regexPoints.Find([]byte(s))
 	if len(b) == 0 {
-		return 0, fmt.Errorf("not a valid point (float) format: %s", s)
+		b = regexPointsComma.Find([]byte(s))
+		if len(b) == 0 {
+			return 0, fmt.Errorf("not a valid point (float) format: %s", s)
+		}
+
+		ss := strings.ReplaceAll(string(b), ",", ".")
+		b = []byte(ss)
 	}
 
 	p, err := strconv.ParseFloat(string(b), 64)
