@@ -2,6 +2,7 @@ launch.json
 debug
 .idea
 *.bat
+*.exe
 /CI/vault-test.yaml
 /CI/vault-dev.yaml
 /envvars

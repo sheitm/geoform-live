@@ -15,8 +15,9 @@ type Service interface {
 }
 
 type Athlete struct {
+	ID      string          `json:"id"`
 	Name    string          `json:"name"`
-	Results []AthleteResult `json:"results"`
+	//Results []AthleteResult `json:"results"`
 }
 
 type AthleteResult struct {

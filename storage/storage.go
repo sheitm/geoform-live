@@ -2,32 +2,36 @@ package storage
 
 import (
 	"github.com/sheitm/ofever/scrape"
-	"log"
 )
 
-var storageDirectory string
+var currentStorageService storageService
+var currentAthleteService athleteService
 
 func Start(storageFolder string, seasonChan <-chan *scrape.SeasonFetch) {
-	storageDirectory = storageFolder
+	storageSeasonChan := make(chan *scrape.SeasonFetch)
+	athleteSeasonChan := make(chan *scrape.SeasonFetch)
+	dispatches := []chan<- *scrape.SeasonFetch{
+		storageSeasonChan,
+		athleteSeasonChan,
+	}
+
+	go func(sc <-chan *scrape.SeasonFetch, dispatches []chan<- *scrape.SeasonFetch) {
+		for {
+			fetch := <- sc
+			for _, dispatch := range dispatches {
+				dispatch <- fetch
+			}
+		}
+	}(seasonChan, dispatches)
+
+	currentStorageService = newStorageService(storageFolder)
+	currentStorageService.Start(storageSeasonChan)
+
+	currentAthleteService = newAthleteService()
+	currentAthleteService.Start(athleteSeasonChan)
 
 	currentCache = &cache{getter: getJSONsFromDirectory}
 	currentCache.init()
 
-	go func(sc <-chan *scrape.SeasonFetch) {
-		for {
-			fetch := <- sc
-			s := NewService(fetch.Year)
-			err := s.Store(fetch)
-			if err != nil {
-				log.Printf("%v", err)
-			}
-		}
-	}(seasonChan)
-}
 
-func NewService(year int) Service {
-	return &service{
-		folder: storageDirectory,
-		year:   year,
-	}
 }
