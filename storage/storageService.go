@@ -48,7 +48,7 @@ func (s *storageServiceImpl) Start(seasonChan <-chan *scrape.SeasonFetch) {
 
 func (s *storageServiceImpl) Store(obj interface{}, fn fileNameFunc) error {
 	s.mux.Lock()
-	s.mux.Unlock()
+	defer s.mux.Unlock()
 
 	filename := fn(obj)
 

@@ -4,6 +4,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/sheitm/ofever/scrape"
 	"log"
+	"sync"
 )
 
 type athletePersistFunc func([]*Athlete)
@@ -11,6 +12,7 @@ type athletePersistFunc func([]*Athlete)
 type athleteService interface {
 	Start(seasonChan <-chan *scrape.SeasonFetch)
 	List() ([]*Athlete, error)
+	ID(name string) string
 }
 
 func newAthleteService(persistArgs ...athletePersistFunc) athleteService {
@@ -28,6 +30,7 @@ func newAthleteService(persistArgs ...athletePersistFunc) athleteService {
 		byName:  map[string]*Athlete{},
 		byID:    map[string]*Athlete{},
 		persist: persist,
+		mux:     &sync.Mutex{},
 	}
 }
 
@@ -35,6 +38,7 @@ type athleteServiceImpl struct {
 	byName  map[string]*Athlete
 	byID    map[string]*Athlete
 	persist athletePersistFunc
+	mux     *sync.Mutex
 }
 
 func (a *athleteServiceImpl) Start(seasonChan <-chan *scrape.SeasonFetch){
@@ -76,6 +80,15 @@ func (a *athleteServiceImpl) Start(seasonChan <-chan *scrape.SeasonFetch){
 	}(seasonChan)
 }
 
+func (a *athleteServiceImpl) ID(name string) string{
+	if athlete, ok := a.byName[name]; ok {
+		return athlete.ID
+	}
+
+	a.newAthlete(name)
+	return a.byName[name].ID
+}
+
 func (a *athleteServiceImpl) List() ([]*Athlete, error) {
 	var res []*Athlete
 	for _, athlete := range a.byID {
@@ -85,6 +98,9 @@ func (a *athleteServiceImpl) List() ([]*Athlete, error) {
 }
 
 func (a *athleteServiceImpl) newAthlete(name string) {
+	a.mux.Lock()
+	defer a.mux.Unlock()
+
 	guid := uuid.New()
 	athlete := &Athlete{
 		ID:   guid.String(),

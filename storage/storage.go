@@ -6,13 +6,16 @@ import (
 
 var currentStorageService storageService
 var currentAthleteService athleteService
+var currentComputeService computeService
 
 func Start(storageFolder string, seasonChan <-chan *scrape.SeasonFetch) {
 	storageSeasonChan := make(chan *scrape.SeasonFetch)
 	athleteSeasonChan := make(chan *scrape.SeasonFetch)
+	computeSeasonChan := make(chan *scrape.SeasonFetch)
 	dispatches := []chan<- *scrape.SeasonFetch{
 		storageSeasonChan,
 		athleteSeasonChan,
+		computeSeasonChan,
 	}
 
 	go func(sc <-chan *scrape.SeasonFetch, dispatches []chan<- *scrape.SeasonFetch) {
@@ -30,8 +33,11 @@ func Start(storageFolder string, seasonChan <-chan *scrape.SeasonFetch) {
 	currentAthleteService = newAthleteService()
 	currentAthleteService.Start(athleteSeasonChan)
 
-	currentCache = &cache{getter: getJSONsFromDirectory}
-	currentCache.init()
+	currentComputeService = newComputeService()
+	currentComputeService.Start(computeSeasonChan)
 
-
+	//currentCache = &cache{getter: getJSONsFromDirectory}
+	//currentCache.init()
 }
+
+// season/2020/athletes

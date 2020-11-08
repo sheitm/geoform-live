@@ -1,15 +1,35 @@
 package storage
 
 import (
+	"encoding/json"
+	"fmt"
+	"github.com/sheitm/ofever/scrape"
 	"testing"
 )
 
 func Test_computeSeason(t *testing.T) {
 	// Arrange
+	c := 0
+	athletesByName := map[string]string{}
+
+	idFunc := func(n string) string {
+		if s, ok := athletesByName[n]; ok {
+			return s
+		}
+		c++
+		id := fmt.Sprintf("%d", c)
+		athletesByName[n] = id
+		return id
+	}
+
+	var f scrape.SeasonFetch
+	err := json.Unmarshal([]byte(jsonSeason2019), &f)
+	if err != nil {
+		t.Errorf("while unmarshaling season2019, %v", err)
+	}
 
 	// Act
-	cs, err := computeSeason(jsonSeason2019)
-	_ = cs
+	cs, err := computeSeason(&f, idFunc)
 
 	// Assert
 	if err != nil {
@@ -19,6 +39,9 @@ func Test_computeSeason(t *testing.T) {
 	a := cs.athletes["Heitmann, Ståle"]
 	if a == nil {
 		t.Error("expected athlete, got none.")
+	}
+	if len(a.Results) != 18 {
+		t.Errorf("expected 18 results, got %d", len(a.Results))
 	}
 }
 

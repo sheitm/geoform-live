@@ -20,6 +20,12 @@ type Athlete struct {
 	//Results []AthleteResult `json:"results"`
 }
 
+type ComputedAthlete struct {
+	ID      string          `json:"id"`
+	Name    string          `json:"name"`
+	Results []AthleteResult `json:"results"`
+}
+
 type AthleteResult struct {
 	Event        string        `json:"event"`
 	Course       string        `json:"course"`

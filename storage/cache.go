@@ -10,14 +10,14 @@ type cache struct {
 }
 
 func (c *cache) init() {
-	m := map[int]*computedSeason{}
-	for _, j := range c.getter() {
-		cs, err := computeSeason(j)
-		if err == nil {
-			m[cs.year] = cs
-		}
-	}
-	c.m = m
+	//m := map[int]*computedSeason{}
+	//for _, j := range c.getter() {
+	//	cs, err := computeSeason(j)
+	//	if err == nil {
+	//		m[cs.year] = cs
+	//	}
+	//}
+	//c.m = m
 }
 
 func getJSONsFromDirectory() []string {
