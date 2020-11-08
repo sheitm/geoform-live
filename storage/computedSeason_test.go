@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func Test_computeSeason(t *testing.T) {
+func Test_computeSeasonForFetch(t *testing.T) {
 	// Arrange
 	c := 0
 	athletesByName := map[string]string{}
@@ -29,7 +29,7 @@ func Test_computeSeason(t *testing.T) {
 	}
 
 	// Act
-	cs, err := computeSeason(&f, idFunc)
+	cs, err := computeSeasonForFetch(&f, idFunc)
 
 	// Assert
 	if err != nil {

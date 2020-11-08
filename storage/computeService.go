@@ -2,14 +2,15 @@ package storage
 
 import (
 	"github.com/sheitm/ofever/scrape"
+	"log"
 	"sync"
 )
 
 type computeService interface {
-	Start(seasonChan <-chan *scrape.SeasonFetch)
+	Start(element seasonSyncElement)
 }
 
-func newComputeService() computeService {
+func newComputeService(getAthleteID athleteIDFunc) computeService {
 	return &computeServiceImpl{
 		computes: map[int]*computedSeason{},
 		mux:      &sync.Mutex{},
@@ -17,15 +18,23 @@ func newComputeService() computeService {
 }
 
 type computeServiceImpl struct {
-	computes map[int]*computedSeason
-	mux      *sync.Mutex
+	computes     map[int]*computedSeason
+	mux          *sync.Mutex
+	getAthleteID athleteIDFunc
 }
 
-func (c *computeServiceImpl) Start(seasonChan <-chan *scrape.SeasonFetch) {
-	//go func(sc <-chan *scrape.SeasonFetch){
-	//	for {
-	//		fetch := <- sc
-	//		cs, err := computedSeason{fetch}
-	//	}
-	//}(seasonChan)
+func (c *computeServiceImpl) Start(element seasonSyncElement) {
+	go func(sc <-chan *scrape.SeasonFetch, dc chan<- struct{}){
+		for {
+			fetch := <- sc
+			cs, err := computeSeasonForFetch(fetch, c.getAthleteID)
+			if err != nil {
+				log.Print(err)
+				dc <- struct{}{}
+				continue
+			}
+			c.computes[cs.year] = cs
+			dc <- struct{}{}
+		}
+	}(element.seasonChan, element.doneChan)
 }

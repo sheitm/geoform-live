@@ -6,14 +6,7 @@ import (
 
 type athleteIDFunc func(string)string
 
-func computeSeason(f *scrape.SeasonFetch, getIDArgs ...athleteIDFunc) (*computedSeason, error) {
-	var getID athleteIDFunc
-	if len(getIDArgs) > 0 {
-		getID = getIDArgs[0]
-	} else {
-		getID = currentAthleteService.ID
-	}
-
+func computeSeasonForFetch(f *scrape.SeasonFetch, getID athleteIDFunc) (*computedSeason, error) {
 	cs := &computedSeason{}
 	cs.init(f, getID)
 

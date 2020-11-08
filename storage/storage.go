@@ -4,40 +4,42 @@ import (
 	"github.com/sheitm/ofever/scrape"
 )
 
-var currentStorageService storageService
-var currentAthleteService athleteService
-var currentComputeService computeService
+//var currentStorageService storageService
+//var currentAthleteService athleteService
+//var currentComputeService computeService
 
+// Start starts the internal functionality that reacts on incoming scraped seasons via the channel seasonChan. Also
+// necessary internal wire up, sp that this method should be invoked before using this package.
 func Start(storageFolder string, seasonChan <-chan *scrape.SeasonFetch) {
-	storageSeasonChan := make(chan *scrape.SeasonFetch)
-	athleteSeasonChan := make(chan *scrape.SeasonFetch)
-	computeSeasonChan := make(chan *scrape.SeasonFetch)
-	dispatches := []chan<- *scrape.SeasonFetch{
-		storageSeasonChan,
-		athleteSeasonChan,
-		computeSeasonChan,
+	sequenceHandler := &sequentialSeasonHandlers{}
+
+	currentStorageService := newStorageService(storageFolder)
+	sequenceHandler.Add(currentStorageService)
+
+	athletePersist := func(athletes []*Athlete) {
+		fn := func(interface{}) string { return "athletes.json" }
+		currentStorageService.Store(athletes, fn)
 	}
-
-	go func(sc <-chan *scrape.SeasonFetch, dispatches []chan<- *scrape.SeasonFetch) {
-		for {
-			fetch := <- sc
-			for _, dispatch := range dispatches {
-				dispatch <- fetch
-			}
+	athleteFetch := func()([]*Athlete, error) {
+		var l []*Athlete
+		fn := func(interface{}) string { return "athletes.json" }
+		err := currentStorageService.Fetch(&l, fn)
+		if err != nil {
+			return l, err
 		}
-	}(seasonChan, dispatches)
+		return l, nil
+	}
+	currentAthleteService := newAthleteService(athletePersist, athleteFetch)
+	sequenceHandler.Add(currentAthleteService)
 
-	currentStorageService = newStorageService(storageFolder)
-	currentStorageService.Start(storageSeasonChan)
+	currentComputeService := newComputeService(currentAthleteService.ID)
+	sequenceHandler.Add(currentComputeService)
 
-	currentAthleteService = newAthleteService()
-	currentAthleteService.Start(athleteSeasonChan)
-
-	currentComputeService = newComputeService()
-	currentComputeService.Start(computeSeasonChan)
-
-	//currentCache = &cache{getter: getJSONsFromDirectory}
-	//currentCache.init()
+	sequenceHandler.Start(seasonChan)
 }
+
+//func Handlers() map[string]http.Handler {
+//
+//}
 
 // season/2020/athletes

@@ -8,30 +8,23 @@ import (
 )
 
 type athletePersistFunc func([]*Athlete)
+type athleteFetchFunc func()([]*Athlete, error)
 
 type athleteService interface {
-	Start(seasonChan <-chan *scrape.SeasonFetch)
+	Start(element seasonSyncElement)
 	List() ([]*Athlete, error)
 	ID(name string) string
 }
 
-func newAthleteService(persistArgs ...athletePersistFunc) athleteService {
-	var persist athletePersistFunc
-	if len(persistArgs) > 0 {
-		persist = persistArgs[0]
-	} else {
-		persist = func(athletes []*Athlete) {
-			fn := func(interface{}) string { return "athletes.json" }
-			currentStorageService.Store(athletes, fn)
-		}
-	}
-
-	return & athleteServiceImpl{
+func newAthleteService(persist athletePersistFunc, fetch athleteFetchFunc) athleteService {
+	impl := &athleteServiceImpl{
 		byName:  map[string]*Athlete{},
 		byID:    map[string]*Athlete{},
 		persist: persist,
 		mux:     &sync.Mutex{},
 	}
+	impl.init(fetch)
+	return impl
 }
 
 type athleteServiceImpl struct {
@@ -41,8 +34,8 @@ type athleteServiceImpl struct {
 	mux     *sync.Mutex
 }
 
-func (a *athleteServiceImpl) Start(seasonChan <-chan *scrape.SeasonFetch){
-	go func(sc <-chan *scrape.SeasonFetch){
+func (a *athleteServiceImpl) Start(element seasonSyncElement){
+	go func(sc <-chan *scrape.SeasonFetch, dc chan<- struct{}){
 		for {
 			fetch := <-sc
 			anyChange := false
@@ -76,8 +69,9 @@ func (a *athleteServiceImpl) Start(seasonChan <-chan *scrape.SeasonFetch){
 				}
 				a.persist(l)
 			}
+			dc <- struct{}{}
 		}
-	}(seasonChan)
+	}(element.seasonChan, element.doneChan)
 }
 
 func (a *athleteServiceImpl) ID(name string) string{
@@ -95,6 +89,18 @@ func (a *athleteServiceImpl) List() ([]*Athlete, error) {
 		res = append(res, athlete)
 	}
 	return res, nil
+}
+
+func (a *athleteServiceImpl) init(fetch athleteFetchFunc) {
+	l, err := fetch()
+	if err != nil{
+		return
+	}
+
+	for _, athlete := range l {
+		a.byName[athlete.Name] = athlete
+		a.byID[athlete.ID] = athlete
+	}
 }
 
 func (a *athleteServiceImpl) newAthlete(name string) {

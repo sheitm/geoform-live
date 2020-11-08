@@ -6,14 +6,15 @@ import (
 	"github.com/sheitm/ofever/scrape"
 	"io/ioutil"
 	"log"
+	"os"
 	"path"
 	"sync"
 )
 
 type storageService interface {
-	//Store(fetch *scrape.SeasonFetch) error
-	Start(seasonChan <-chan *scrape.SeasonFetch)
+	Start(element seasonSyncElement)
 	Store(obj interface{}, fn fileNameFunc) error
+	Fetch(obj interface{}, fn fileNameFunc) error
 }
 
 type fileNameFunc func(interface{}) string
@@ -30,10 +31,10 @@ type storageServiceImpl struct {
 	mux *sync.Mutex
 }
 
-func (s *storageServiceImpl) Start(seasonChan <-chan *scrape.SeasonFetch) {
-	go func(sc <-chan *scrape.SeasonFetch) {
+func (s *storageServiceImpl) Start(element seasonSyncElement) {
+	go func(sc <-chan *scrape.SeasonFetch, dc chan<- struct{}) {
 		for {
-			fetch := <- seasonChan
+			fetch := <- sc
 			fn := func(obj interface{}) string {
 				f := obj.(*scrape.SeasonFetch)
 				return fmt.Sprintf("season_%d.json", f.Year)
@@ -42,8 +43,29 @@ func (s *storageServiceImpl) Start(seasonChan <-chan *scrape.SeasonFetch) {
 			if err != nil {
 				log.Printf("%v", err)
 			}
+			dc <- struct{}{}
 		}
-	}(seasonChan)
+	}(element.seasonChan, element.doneChan)
+}
+
+func (s *storageServiceImpl) Fetch(obj interface{}, fn fileNameFunc) error {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+
+	filename := fn(obj)
+	fp := path.Join(s.folder, filename)
+	jsonFile, err := os.Open(fp)
+	if err != nil {
+		return err
+	}
+	defer jsonFile.Close()
+
+	byteValue, err := ioutil.ReadAll(jsonFile)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(byteValue, obj)
 }
 
 func (s *storageServiceImpl) Store(obj interface{}, fn fileNameFunc) error {

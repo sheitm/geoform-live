@@ -3,7 +3,6 @@ package storage
 import (
 	"encoding/json"
 	"github.com/sheitm/ofever/scrape"
-	"sync"
 	"testing"
 )
 
@@ -16,21 +15,25 @@ func Test_athleteServiceImpl_Start(t *testing.T) {
 	}
 
 	var receivedAthletes []*Athlete
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
 	persist := func(a []*Athlete) {
 		receivedAthletes = a
-		wg.Done()
+	}
+	fetch := func() ([]*Athlete, error) {
+		return []*Athlete{}, nil
 	}
 
-	seasonChan := make(chan *scrape.SeasonFetch)
-	service := newAthleteService(persist)
+	service := newAthleteService(persist, fetch)
+
+	element := seasonSyncElement{
+		seasonChan: make(chan *scrape.SeasonFetch),
+		doneChan:   make(chan struct{}),
+	}
 
 	// Act
-	service.Start(seasonChan)
-	seasonChan <- &f
+	service.Start(element)
+	element.seasonChan <- &f
 
-	wg.Wait()
+	<- element.doneChan
 
 	// Assert
 	if len(receivedAthletes) != 948 {
