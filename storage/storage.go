@@ -37,7 +37,10 @@ func Start(storageFolder string, seasonChan <-chan *scrape.SeasonFetch) {
 	sequenceHandler.Start(seasonChan)
 
 	// athlete
-	handler := newAthleteHandler(currentAthleteService.List)
+	handler := newAthleteHandler(currentAthleteService.List, currentComputeService.ComputedSeason)
+	handlers = append(handlers, handler)
+	// season
+	handler = newComputedSeasonHandler(currentComputeService.ComputedSeason)
 	handlers = append(handlers, handler)
 }
 

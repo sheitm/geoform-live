@@ -6,24 +6,19 @@ import (
 
 type athleteIDFunc func(string)string
 
-type computedSeason interface {
-	Athletes() map[string]*computedAthlete
-	Year() int
-}
-
-func computeSeasonForFetch(f *scrape.SeasonFetch, getID athleteIDFunc) (computedSeason, error) {
-	cs := &computedSeasonImpl{}
+func computeSeasonForFetch(f *scrape.SeasonFetch, getID athleteIDFunc) (*computedSeason, error) {
+	cs := &computedSeason{}
 	cs.init(f, getID)
 
 	return cs, nil
 }
 
-type computedSeasonImpl struct {
-	year int
-	athletes map[string]*computedAthlete
+type computedSeason struct {
+	Year     int                         `json:"year"`
+	Athletes map[string]*computedAthlete `json:"athletes"`
 }
 
-func (c *computedSeasonImpl) init(fetch *scrape.SeasonFetch, getID athleteIDFunc) {
+func (c *computedSeason) init(fetch *scrape.SeasonFetch, getID athleteIDFunc) {
 	athletes := map[string]*computedAthlete{}
 	for _, result := range fetch.Results {
 		if result.Event == nil {
@@ -60,10 +55,5 @@ func (c *computedSeasonImpl) init(fetch *scrape.SeasonFetch, getID athleteIDFunc
 			}
 		}
 	}
-	c.athletes = athletes
+	c.Athletes = athletes
 }
-
-func (c *computedSeasonImpl) Athletes() map[string]*computedAthlete {
-	return c.athletes
-}
-

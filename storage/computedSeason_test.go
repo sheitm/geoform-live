@@ -36,7 +36,7 @@ func Test_computeSeasonForFetch(t *testing.T) {
 		t.Errorf("unexpected error, %v", err)
 	}
 
-	a := cs.Athletes()["Heitmann, Ståle"]
+	a := cs.Athletes["Heitmann, Ståle"]
 	if a == nil {
 		t.Error("expected athlete, got none.")
 	}

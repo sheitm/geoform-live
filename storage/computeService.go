@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"fmt"
 	"github.com/sheitm/ofever/scrape"
 	"log"
 	"sync"
@@ -8,17 +9,19 @@ import (
 
 type computeService interface {
 	Start(element seasonSyncElement)
+	ComputedSeason(year int) (*computedSeason, error)
 }
 
 func newComputeService(getAthleteID athleteIDFunc) computeService {
 	return &computeServiceImpl{
-		computes: map[int]computedSeason{},
-		mux:      &sync.Mutex{},
+		computes:     map[int]*computedSeason{},
+		mux:          &sync.Mutex{},
+		getAthleteID: getAthleteID,
 	}
 }
 
 type computeServiceImpl struct {
-	computes     map[int]computedSeason
+	computes     map[int]*computedSeason
 	mux          *sync.Mutex
 	getAthleteID athleteIDFunc
 }
@@ -33,8 +36,15 @@ func (c *computeServiceImpl) Start(element seasonSyncElement) {
 				dc <- struct{}{}
 				continue
 			}
-			c.computes[cs.year] = cs
+			c.computes[cs.Year] = cs
 			dc <- struct{}{}
 		}
 	}(element.seasonChan, element.doneChan)
+}
+
+func (c *computeServiceImpl) ComputedSeason(year int) (*computedSeason, error) {
+	if cs, ok := c.computes[year]; ok {
+		return cs, nil
+	}
+	return nil, fmt.Errorf("missing computation for year %d", year)
 }

@@ -5,12 +5,16 @@ import (
 	"net/http"
 )
 
-func newAthleteHandler(fetch athleteFetchFunc) httpHandler {
-	return &athleteHandler{fetch: fetch}
+func newAthleteHandler(fetch athleteFetchFunc, csFetch computedSeasonFetchFunc) httpHandler {
+	return &athleteHandler{
+		fetch:   fetch,
+		csFetch: csFetch,
+	}
 }
 
 type athleteHandler struct {
-	fetch athleteFetchFunc
+	fetch   athleteFetchFunc
+	csFetch computedSeasonFetchFunc
 }
 
 func (h *athleteHandler) Path() string {

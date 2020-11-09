@@ -7,9 +7,6 @@ import (
 	"sync"
 )
 
-type athletePersistFunc func([]*athlete)
-type athleteFetchFunc func()([]*athlete, error)
-
 type athleteService interface {
 	Start(element seasonSyncElement)
 	List() ([]*athlete, error)

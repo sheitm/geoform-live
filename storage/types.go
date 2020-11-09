@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+type athletePersistFunc func([]*athlete)
+type athleteFetchFunc func()([]*athlete, error)
+type computedSeasonFetchFunc func(int)(*computedSeason, error)
+
 type httpHandler interface {
 	Path() string
 	ServeHTTP(http.ResponseWriter, *http.Request)
