@@ -7,19 +7,19 @@ import (
 	"sync"
 )
 
-type athletePersistFunc func([]*Athlete)
-type athleteFetchFunc func()([]*Athlete, error)
+type athletePersistFunc func([]*athlete)
+type athleteFetchFunc func()([]*athlete, error)
 
 type athleteService interface {
 	Start(element seasonSyncElement)
-	List() ([]*Athlete, error)
+	List() ([]*athlete, error)
 	ID(name string) string
 }
 
 func newAthleteService(persist athletePersistFunc, fetch athleteFetchFunc) athleteService {
 	impl := &athleteServiceImpl{
-		byName:  map[string]*Athlete{},
-		byID:    map[string]*Athlete{},
+		byName:  map[string]*athlete{},
+		byID:    map[string]*athlete{},
 		persist: persist,
 		mux:     &sync.Mutex{},
 	}
@@ -28,8 +28,8 @@ func newAthleteService(persist athletePersistFunc, fetch athleteFetchFunc) athle
 }
 
 type athleteServiceImpl struct {
-	byName  map[string]*Athlete
-	byID    map[string]*Athlete
+	byName  map[string]*athlete
+	byID    map[string]*athlete
 	persist athletePersistFunc
 	mux     *sync.Mutex
 }
@@ -75,18 +75,18 @@ func (a *athleteServiceImpl) Start(element seasonSyncElement){
 }
 
 func (a *athleteServiceImpl) ID(name string) string{
-	if athlete, ok := a.byName[name]; ok {
-		return athlete.ID
+	if a, ok := a.byName[name]; ok {
+		return a.ID
 	}
 
 	a.newAthlete(name)
 	return a.byName[name].ID
 }
 
-func (a *athleteServiceImpl) List() ([]*Athlete, error) {
-	var res []*Athlete
-	for _, athlete := range a.byID {
-		res = append(res, athlete)
+func (a *athleteServiceImpl) List() ([]*athlete, error) {
+	var res []*athlete
+	for _, a := range a.byID {
+		res = append(res, a)
 	}
 	return res, nil
 }
@@ -108,7 +108,7 @@ func (a *athleteServiceImpl) newAthlete(name string) {
 	defer a.mux.Unlock()
 
 	guid := uuid.New()
-	athlete := &Athlete{
+	athlete := &athlete{
 		ID:   guid.String(),
 		Name: name,
 	}

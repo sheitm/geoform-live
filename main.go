@@ -19,3 +19,4 @@ func main(){
 	// startServer must be last line
 	startServer("2112", seasonChan)
 }
+//http://localhost:2112/scrape/2019

@@ -15,11 +15,11 @@ func computeSeasonForFetch(f *scrape.SeasonFetch, getID athleteIDFunc) (*compute
 
 type computedSeason struct {
 	year int
-	athletes map[string]*ComputedAthlete
+	athletes map[string]*computedAthlete
 }
 
 func (c *computedSeason) init(fetch *scrape.SeasonFetch, getID athleteIDFunc) {
-	athletes := map[string]*ComputedAthlete{}
+	athletes := map[string]*computedAthlete{}
 	for _, result := range fetch.Results {
 		if result.Event == nil {
 			continue
@@ -33,17 +33,17 @@ func (c *computedSeason) init(fetch *scrape.SeasonFetch, getID athleteIDFunc) {
 				continue
 			}
 			for _, r := range course.Results {
-				var athlete *ComputedAthlete
+				var athlete *computedAthlete
 				var ok bool
 				if athlete, ok = athletes[r.Athlete]; !ok {
-					athlete = &ComputedAthlete{
+					athlete = &computedAthlete{
 						Name:    r.Athlete,
 						ID:      getID(r.Athlete),
-						Results: []AthleteResult{},
+						Results: []athleteResult{},
 					}
 					athletes[athlete.Name] = athlete
 				}
-				res := AthleteResult{
+				res := athleteResult{
 					Event:        eventName,
 					Course:       course.Name,
 					Disqualified: r.Disqualified,

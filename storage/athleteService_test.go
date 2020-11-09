@@ -14,12 +14,12 @@ func Test_athleteServiceImpl_Start(t *testing.T) {
 		t.Errorf("unexpected error when unmarshaling json, %v", err)
 	}
 
-	var receivedAthletes []*Athlete
-	persist := func(a []*Athlete) {
+	var receivedAthletes []*athlete
+	persist := func(a []*athlete) {
 		receivedAthletes = a
 	}
-	fetch := func() ([]*Athlete, error) {
-		return []*Athlete{}, nil
+	fetch := func() ([]*athlete, error) {
+		return []*athlete{}, nil
 	}
 
 	service := newAthleteService(persist, fetch)

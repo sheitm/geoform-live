@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/sheitm/ofever/scrape"
+	"github.com/sheitm/ofever/storage"
 	"log"
 	"net/http"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -19,6 +20,10 @@ func startServer(port string, seasonChan chan<- *scrape.SeasonFetch){
 	http.Handle("/scrape/", sHandler)
 
 	http.Handle("/metrics", promhttp.Handler())
+
+	for path, handler := range storage.Handlers() {
+		http.Handle(path, handler)
+	}
 
 	//fileServer := http.FileServer(http.Dir("./static"))
 	//http.Handle("/", fileServer)

@@ -1,32 +1,28 @@
 package storage
 
 import (
-	"github.com/sheitm/ofever/scrape"
+	"net/http"
 	"time"
 )
 
-// Service provides an API for all events and athletes that have been active during a season. A season is defined by
-// the year.
-type Service interface {
-
-	// Store stores the entire season in internal storage.
-	Store(fetch *scrape.SeasonFetch) error
-	Year() int
+type httpHandler interface {
+	Path() string
+	ServeHTTP(http.ResponseWriter, *http.Request)
 }
 
-type Athlete struct {
+type athlete struct {
 	ID      string          `json:"id"`
 	Name    string          `json:"name"`
 	//Results []AthleteResult `json:"results"`
 }
 
-type ComputedAthlete struct {
+type computedAthlete struct {
 	ID      string          `json:"id"`
 	Name    string          `json:"name"`
-	Results []AthleteResult `json:"results"`
+	Results []athleteResult `json:"results"`
 }
 
-type AthleteResult struct {
+type athleteResult struct {
 	Event        string        `json:"event"`
 	Course       string        `json:"course"`
 	Disqualified bool          `json:"disqualified"`
