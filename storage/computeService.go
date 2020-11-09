@@ -12,13 +12,13 @@ type computeService interface {
 
 func newComputeService(getAthleteID athleteIDFunc) computeService {
 	return &computeServiceImpl{
-		computes: map[int]*computedSeason{},
+		computes: map[int]computedSeason{},
 		mux:      &sync.Mutex{},
 	}
 }
 
 type computeServiceImpl struct {
-	computes     map[int]*computedSeason
+	computes     map[int]computedSeason
 	mux          *sync.Mutex
 	getAthleteID athleteIDFunc
 }
