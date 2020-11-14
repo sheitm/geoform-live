@@ -2,6 +2,7 @@ package storage
 
 import (
 	"net/http"
+	"sort"
 	"time"
 )
 
@@ -21,10 +22,49 @@ type athlete struct {
 	//Results []AthleteResult `json:"results"`
 }
 
+type byPoints []athleteResult
+
+func (a byPoints) Len() int           { return len(a) }
+func (a byPoints) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a byPoints) Less(i, j int) bool { return a[i].Points > a[j].Points }
+
+
 type computedAthlete struct {
-	ID      string          `json:"id"`
-	Name    string          `json:"name"`
-	Results []athleteResult `json:"results"`
+	ID                string          `json:"id"`
+	Name              string          `json:"name"`
+	Results           []athleteResult `json:"results"`
+	BestResult        athleteResult   `json:"best_result"`
+	WorstResult       athleteResult   `json:"worst_result"`
+	PointsTotal       float64         `json:"points_total"`
+	PlacementTotal    int             `json:"placement_total"`
+	PointsOfficial    float64         `json:"points_official"`
+	PlacementOfficial int             `json:"placement_official"`
+}
+
+func (a *computedAthlete) computePoints(officialCount int) {
+	if a.Results == nil {
+		return
+	}
+
+	sort.Sort(byPoints(a.Results))
+
+	tot := 0.0
+	poc := 0.0
+	lim := officialCount
+	if len(a.Results) < officialCount {
+		lim = len(a.Results)
+	}
+	for i, result := range a.Results {
+		tot += result.Points
+		if i < lim {
+			poc += result.Points
+		}
+	}
+
+	a.PointsTotal = tot
+	a.BestResult = a.Results[0]
+	a.WorstResult = a.Results[len(a.Results)-1]
+	a.PointsOfficial = poc
 }
 
 type athleteResult struct {

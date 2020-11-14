@@ -89,7 +89,7 @@ func Test_computedSeasonHandler_ServeHTTP(t *testing.T) {
 		t.Errorf("expected http code 200, got %d", rr.Code)
 	}
 	body := rr.Body.String()
-	if body != `{"year":2020,"athletes":null}` {
+	if body != `{"year":2020,"athletes":null,"events_count":0,"valid_events_count":0}` {
 		t.Errorf("unexpected body, got %s", body)
 	}
 }
