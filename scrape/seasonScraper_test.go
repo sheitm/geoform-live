@@ -22,11 +22,11 @@ func Test_startSeason_statusCode500(t *testing.T) {
 	fetch := <- resultChan
 
 	// Assert
-	if fetch.Error == nil {
+	if fetch.Error == "" {
 		t.Error("expected err, got none")
 	}
-	if fetch.Error.Error() != "500 Internal Server Error" {
-		t.Errorf("unexpected error message, got %s", fetch.Error.Error())
+	if fetch.Error != "500 Internal Server Error" {
+		t.Errorf("unexpected error message, got %s", fetch.Error)
 	}
 }
 
@@ -56,7 +56,7 @@ func Test_startSeason_success(t *testing.T) {
 	fetch := <- resultChan
 
 	// Assert
-	if fetch.Error != nil {
+	if fetch.Error != "" {
 		t.Errorf("unexpected error, got %v", fetch.Error)
 	}
 	if len(fetch.Results) != 24 {
@@ -70,7 +70,7 @@ func Test_startSeason_success(t *testing.T) {
 	okCount := 0
 	failedCount := 0
 	for _, result := range fetch.Results {
-		if result.Error != nil {
+		if result.Error != "" {
 			failedCount++
 			continue
 		}

@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"encoding/json"
 	"github.com/sheitm/ofever/scrape"
 	"net/http"
 )
@@ -15,23 +16,12 @@ func Start(storageFolder string, seasonChan <-chan *scrape.SeasonFetch) {
 	currentStorageService := newStorageService(storageFolder)
 	sequenceHandler.Add(currentStorageService)
 
-	athletePersist := func(athletes []*athlete) {
-		fn := func(interface{}) string { return "athletes.json" }
-		currentStorageService.Store(athletes, fn)
-	}
-	athleteFetch := func()([]*athlete, error) {
-		var l []*athlete
-		fn := func(interface{}) string { return "athletes.json" }
-		err := currentStorageService.Fetch(&l, fn)
-		if err != nil {
-			return l, err
-		}
-		return l, nil
-	}
+	athleteFetch, athletePersist := getAthleteFunctions(currentStorageService)
 	currentAthleteService := newAthleteService(athletePersist, athleteFetch)
 	sequenceHandler.Add(currentAthleteService)
 
-	currentComputeService := newComputeService(currentAthleteService.ID)
+	computedSeasonFetch := getComputedSeasonsFunctions(currentStorageService, storageFolder, currentAthleteService.ID)
+	currentComputeService := newComputeService(computedSeasonFetch, currentAthleteService.ID)
 	sequenceHandler.Add(currentComputeService)
 
 	sequenceHandler.Start(seasonChan)
@@ -51,5 +41,47 @@ func Handlers() map[string]http.Handler {
 		h[handler.Path()] = handler
 	}
 	return h
+}
+
+func getComputedSeasonsFunctions(currentStorageService storageService, folder string, getID athleteIDFunc) computedSeasonsFetchFunc {
+	fetch := func()([]*computedSeason, error){
+		contents, err := currentStorageService.ReadFolder(folder, `season_\d{4}.json`)
+		if err != nil {
+			return nil, err
+		}
+		var res []*computedSeason
+		for _, c := range contents {
+			var scrapedFetch scrape.SeasonFetch
+			err := json.Unmarshal([]byte(c), &scrapedFetch)
+			if err != nil {
+				return nil, err
+			}
+			computed, err := computeSeasonForFetch(&scrapedFetch, getID)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, computed)
+		}
+		return res, nil
+	}
+	return fetch
+}
+
+func getAthleteFunctions(currentStorageService storageService) (athleteFetchFunc, athletePersistFunc)  {
+	athletePersist := func(athletes []*athlete) {
+		fn := func(interface{}) string { return "athletes.json" }
+		currentStorageService.Store(athletes, fn)
+	}
+	athleteFetch := func()([]*athlete, error) {
+		var l []*athlete
+		fn := func(interface{}) string { return "athletes.json" }
+		err := currentStorageService.Fetch(&l, fn)
+		if err != nil {
+			return l, err
+		}
+		return l, nil
+	}
+
+	return athleteFetch, athletePersist
 }
 

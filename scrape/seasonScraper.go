@@ -38,7 +38,7 @@ func (s *seasonScraper) scrape(url string, resultChan chan<- *SeasonFetch) {
 
 	rows, err := s.getEventRows(url)
 	if err != nil {
-		fetch.Error = err
+		fetch.Error = err.Error()
 		resultChan <- fetch
 		return
 	}

@@ -18,7 +18,9 @@ func startEventScrape(row *tableRow,  resultChan chan<- *Result, client *http.Cl
 		}
 		event, err := scraper.Scrape(url)
 		res.Event = event
-		res.Error = err
+		if err != nil {
+			res.Error = err.Error()
+		}
 		resultChan <- res
 	}(row, resultChan, client)
 }

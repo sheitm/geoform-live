@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"regexp"
 	"sync"
 )
 
@@ -15,6 +16,7 @@ type storageService interface {
 	Start(element seasonSyncElement)
 	Store(obj interface{}, fn fileNameFunc) error
 	Fetch(obj interface{}, fn fileNameFunc) error
+	ReadFolder(folder, filePattern string) ([]string, error)
 }
 
 type fileNameFunc func(interface{}) string
@@ -29,6 +31,28 @@ func newStorageService(storageFolder string) storageService {
 type storageServiceImpl struct {
 	folder string
 	mux *sync.Mutex
+}
+
+func (s *storageServiceImpl) ReadFolder(folder, filePattern string) ([]string, error) {
+	files, err := ioutil.ReadDir(folder)
+	if err != nil {
+		return nil, err
+	}
+	r := regexp.MustCompile(filePattern)
+	var res []string
+	for _, file := range files {
+		n := file.Name()
+		if !r.Match([]byte(n)) {
+			continue
+		}
+		fn := path.Join(folder, n)
+		content, err := ioutil.ReadFile(fn)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, string(content))
+	}
+	return res, nil
 }
 
 func (s *storageServiceImpl) Start(element seasonSyncElement) {

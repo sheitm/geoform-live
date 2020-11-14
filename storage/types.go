@@ -7,6 +7,7 @@ import (
 
 type athletePersistFunc func([]*athlete)
 type athleteFetchFunc func()([]*athlete, error)
+type computedSeasonsFetchFunc func()([]*computedSeason, error)
 type computedSeasonFetchFunc func(int)(*computedSeason, error)
 
 type httpHandler interface {

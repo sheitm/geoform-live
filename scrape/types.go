@@ -7,7 +7,7 @@ type SeasonFetch struct {
 	Year    int       `json:"year"`
 	URL     string    `json:"url"`
 	Results []*Result `json:"results"`
-	Error   error     `json:"error"`
+	Error   string    `json:"error"`
 }
 
 // Result is the result of a single event scraping session.
@@ -19,5 +19,5 @@ type Result struct {
 	Event *contracts.Event `json:"event"`
 
 	// Error details if any error occurred during execution.
-	Error error `json:"error"`
+	Error string `json:"error"`
 }

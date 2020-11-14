@@ -12,12 +12,14 @@ type computeService interface {
 	ComputedSeason(year int) (*computedSeason, error)
 }
 
-func newComputeService(getAthleteID athleteIDFunc) computeService {
-	return &computeServiceImpl{
+func newComputeService(fetch computedSeasonsFetchFunc, getAthleteID athleteIDFunc) computeService {
+	cs := &computeServiceImpl{
 		computes:     map[int]*computedSeason{},
 		mux:          &sync.Mutex{},
 		getAthleteID: getAthleteID,
 	}
+	cs.init(fetch)
+	return cs
 }
 
 type computeServiceImpl struct {
@@ -47,4 +49,16 @@ func (c *computeServiceImpl) ComputedSeason(year int) (*computedSeason, error) {
 		return cs, nil
 	}
 	return nil, fmt.Errorf("missing computation for year %d", year)
+}
+
+func (c *computeServiceImpl) init(fetch computedSeasonsFetchFunc) {
+	cs, err := fetch()
+	if err != nil {
+		// TODO: Handler error
+		log.Print(err)
+		return
+	}
+	for _, season := range cs {
+		c.computes[season.Year] = season
+	}
 }

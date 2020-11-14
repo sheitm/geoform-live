@@ -36,12 +36,33 @@ func Test_computeSeasonForFetch(t *testing.T) {
 		t.Errorf("unexpected error, %v", err)
 	}
 
+	if cs.Year != 2019 {
+		t.Errorf("unexpected year, got %d", cs.Year)
+	}
+
 	a := cs.Athletes["Heitmann, Ståle"]
 	if a == nil {
 		t.Error("expected athlete, got none.")
 	}
 	if len(a.Results) != 18 {
 		t.Errorf("expected 18 results, got %d", len(a.Results))
+	}
+}
+
+func Test_unmarshalScapeFetch(t *testing.T) {
+	var fetch scrape.SeasonFetch
+
+	err := json.Unmarshal([]byte(jsonSeason2019), &fetch)
+	if err != nil {
+		t.Errorf("unexpected error, %v", err)
+	}
+
+	if fetch.Year != 2019 {
+		t.Errorf("unexpected year, got %d", fetch.Year)
+	}
+
+	if len(fetch.Results) != 27 {
+		t.Errorf("unexpected number of results, got %d", len(fetch.Results))
 	}
 }
 

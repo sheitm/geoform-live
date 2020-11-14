@@ -19,6 +19,7 @@ type computedSeason struct {
 }
 
 func (c *computedSeason) init(fetch *scrape.SeasonFetch, getID athleteIDFunc) {
+	c.Year = fetch.Year
 	athletes := map[string]*computedAthlete{}
 	for _, result := range fetch.Results {
 		if result.Event == nil {
