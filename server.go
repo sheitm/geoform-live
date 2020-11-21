@@ -25,9 +25,8 @@ func startServer(port string, seasonChan chan<- *scrape.SeasonFetch){
 		http.Handle(path, handler)
 	}
 
-	//fileServer := http.FileServer(http.Dir("./static"))
-	//http.Handle("/", fileServer)
-	//
+	fileServer := http.FileServer(http.Dir("./static"))
+	http.Handle("/", fileServer)
 
 	pp := ":" + port
 
