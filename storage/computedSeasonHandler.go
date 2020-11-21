@@ -37,7 +37,7 @@ func (h *computedSeasonHandler) ServeHTTP(rw http.ResponseWriter, req *http.Requ
 		return
 	}
 
-	b, err := json.Marshal(cs)
+	b, err := json.Marshal(cs.dto())
 
 	if err != nil {
 		rw.WriteHeader(500)

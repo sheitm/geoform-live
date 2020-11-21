@@ -26,11 +26,27 @@ func computeSeasonForFetch(f *scrape.SeasonFetch, getID athleteIDFunc) (*compute
 	return cs, nil
 }
 
+type computedSeasonDTO struct {
+	Year             int                `json:"year"`
+	Athletes         []*computedAthlete `json:"athletes"`
+	EventsCount      int                `json:"events_count"`
+	ValidEventsCount int                `json:"valid_events_count"`
+}
+
 type computedSeason struct {
 	Year             int                         `json:"year"`
 	Athletes         map[string]*computedAthlete `json:"athletes"`
 	EventsCount      int                         `json:"events_count"`
 	ValidEventsCount int                         `json:"valid_events_count"`
+}
+
+func (c *computedSeason) dto() *computedSeasonDTO {
+	return &computedSeasonDTO{
+		Year:             c.Year,
+		Athletes:         c.athleteSlice(),
+		EventsCount:      c.EventsCount,
+		ValidEventsCount: c.ValidEventsCount,
+	}
 }
 
 func (c *computedSeason) computePointsAndPlacements() {
