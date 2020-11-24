@@ -43,6 +43,7 @@ func (h *computedSeasonHandler) ServeHTTP(rw http.ResponseWriter, req *http.Requ
 		rw.WriteHeader(500)
 		return
 	}
+	rw.Header().Add("Access-Control-Allow-Origin", "*")
 	rw.Write(b)
 }
 

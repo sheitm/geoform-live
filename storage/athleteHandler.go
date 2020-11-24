@@ -33,6 +33,7 @@ func (h *athleteHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(500)
 		return
 	}
+	rw.Header().Add("Access-Control-Allow-Origin", "*")
 	rw.Write(b)
 }
 
