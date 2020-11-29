@@ -90,7 +90,8 @@ func (a *athleteServiceImpl) List() ([]*athlete, error) {
 
 func (a *athleteServiceImpl) init(fetch athleteFetchFunc) {
 	l, err := fetch()
-	if err != nil{
+	if err != nil {
+		log.Printf("%v", err)
 		return
 	}
 

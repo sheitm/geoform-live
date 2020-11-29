@@ -10,6 +10,8 @@ type athletePersistFunc func([]*athlete)
 type athleteFetchFunc func()([]*athlete, error)
 type computedSeasonsFetchFunc func()([]*computedSeason, error)
 type computedSeasonFetchFunc func(int)(*computedSeason, error)
+type competitionPersistFunc func([]*competition)
+type competitionFetchFunc func()([]*competition, error)
 
 type httpHandler interface {
 	Path() string
@@ -74,4 +76,27 @@ type athleteResult struct {
 	Placement    int           `json:"placement"`
 	ElapsedTime  time.Duration `json:"elapsed_time"`
 	Points       float64       `json:"points"`
+}
+
+type competition struct {
+	ID          string    `json:"id"`
+	Number      int       `json:"number"`
+	Name        string    `json:"name"`
+	Date        time.Time `json:"date"`
+	Courses     []course  `json:"courses"`
+	Info        string    `json:"info"`
+	URL         string    `json:"url"`
+	URLInvite   string    `json:"url_invite"`
+	URLLiveLox  string    `json:"url_live_lox"`
+	Place       string    `json:"place"`
+	Organizer   string    `json:"organizer"`
+	Responsible string    `json:"responsible"`
+}
+
+type course struct {
+	ID         string  `json:"id"`
+	Name       string  `json:"name"`
+	Info       string  `json:"info"`
+	Length     float64 `json:"length"`
+	CourseType string  `json:"course_type"` // long, medium, short, newbie
 }

@@ -16,6 +16,10 @@ func Start(storageFolder string, seasonChan <-chan *scrape.SeasonFetch) {
 	currentStorageService := newStorageService(storageFolder)
 	sequenceHandler.Add(currentStorageService)
 
+	competitionFetch, competitionPersist := getCompetitionFunctions(currentStorageService)
+	currentCompetitionService := newCompetitionService(competitionPersist, competitionFetch)
+	sequenceHandler.Add(currentCompetitionService)
+
 	athleteFetch, athletePersist := getAthleteFunctions(currentStorageService)
 	currentAthleteService := newAthleteService(athletePersist, athleteFetch)
 	sequenceHandler.Add(currentAthleteService)
@@ -85,3 +89,19 @@ func getAthleteFunctions(currentStorageService storageService) (athleteFetchFunc
 	return athleteFetch, athletePersist
 }
 
+func getCompetitionFunctions(currentStorageService storageService) (competitionFetchFunc, competitionPersistFunc) {
+	competitionPersist := func(competitions []*competition) {
+		fn := func(interface{}) string { return "competitions.json"}
+		currentStorageService.Store(competitions, fn)
+	}
+	competitionFetch := func() ([]*competition, error) {
+		var c []*competition
+		fn := func(interface{}) string { return "competitions.json"}
+		err := currentStorageService.Fetch(&c, fn)
+		if err != nil {
+			return c, err
+		}
+		return c, nil
+	}
+	return competitionFetch, competitionPersist
+}
