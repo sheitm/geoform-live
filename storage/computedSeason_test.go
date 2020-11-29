@@ -22,6 +22,14 @@ func Test_computeSeasonForFetch(t *testing.T) {
 		return id
 	}
 
+	compFunc := func(eventName, courseName string) (competitionAndCourse, error){
+		cac := competitionAndCourse{
+			competition: &competition{ID: eventName},
+			course:      &course{ID: courseName},
+		}
+		return cac, nil
+	}
+
 	var f scrape.SeasonFetch
 	err := json.Unmarshal([]byte(jsonSeason2019), &f)
 	if err != nil {
@@ -29,7 +37,7 @@ func Test_computeSeasonForFetch(t *testing.T) {
 	}
 
 	// Act
-	cs, err := computeSeasonForFetch(&f, idFunc)
+	cs, err := computeSeasonForFetch(&f, idFunc, compFunc)
 
 	// Assert
 	if err != nil {
@@ -71,8 +79,16 @@ func Test_computeSeasonForFetch_checkPointsAndPlacements(t *testing.T) {
 		return id
 	}
 
+	compFunc := func(eventName, courseName string) (competitionAndCourse, error){
+		cac := competitionAndCourse{
+			competition: &competition{ID: eventName},
+			course:      &course{ID: courseName},
+		}
+		return cac, nil
+	}
+
 	// Act
-	cs, err := computeSeasonForFetch(&fetch, idFunc)
+	cs, err := computeSeasonForFetch(&fetch, idFunc, compFunc)
 
 	// Assert
 	if err != nil {

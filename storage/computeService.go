@@ -12,27 +12,29 @@ type computeService interface {
 	ComputedSeason(year int) (*computedSeason, error)
 }
 
-func newComputeService(fetch computedSeasonsFetchFunc, getAthleteID athleteIDFunc) computeService {
+func newComputeService(fetch computedSeasonsFetchFunc, getAthleteID athleteIDFunc, getCompetitionByName competitionByNamesFunc) computeService {
 	cs := &computeServiceImpl{
-		computes:     map[int]*computedSeason{},
-		mux:          &sync.Mutex{},
-		getAthleteID: getAthleteID,
+		computes:             map[int]*computedSeason{},
+		mux:                  &sync.Mutex{},
+		getAthleteID:         getAthleteID,
+		getCompetitionByName: getCompetitionByName,
 	}
 	cs.init(fetch)
 	return cs
 }
 
 type computeServiceImpl struct {
-	computes     map[int]*computedSeason
-	mux          *sync.Mutex
-	getAthleteID athleteIDFunc
+	computes             map[int]*computedSeason
+	mux                  *sync.Mutex
+	getAthleteID         athleteIDFunc
+	getCompetitionByName competitionByNamesFunc
 }
 
 func (c *computeServiceImpl) Start(element seasonSyncElement) {
 	go func(sc <-chan *scrape.SeasonFetch, dc chan<- struct{}){
 		for {
 			fetch := <- sc
-			cs, err := computeSeasonForFetch(fetch, c.getAthleteID)
+			cs, err := computeSeasonForFetch(fetch, c.getAthleteID, c.getCompetitionByName)
 			if err != nil {
 				log.Print(err)
 				dc <- struct{}{}

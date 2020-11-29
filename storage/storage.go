@@ -24,8 +24,8 @@ func Start(storageFolder string, seasonChan <-chan *scrape.SeasonFetch) {
 	currentAthleteService := newAthleteService(athletePersist, athleteFetch)
 	sequenceHandler.Add(currentAthleteService)
 
-	computedSeasonFetch := getComputedSeasonsFunctions(currentStorageService, storageFolder, currentAthleteService.ID)
-	currentComputeService := newComputeService(computedSeasonFetch, currentAthleteService.ID)
+	computedSeasonFetch := getComputedSeasonsFunctions(currentStorageService, storageFolder, currentAthleteService.ID, currentCompetitionService.CompetitionByNames)
+	currentComputeService := newComputeService(computedSeasonFetch, currentAthleteService.ID, currentCompetitionService.CompetitionByNames)
 	sequenceHandler.Add(currentComputeService)
 
 	sequenceHandler.Start(seasonChan)
@@ -47,7 +47,7 @@ func Handlers() map[string]http.Handler {
 	return h
 }
 
-func getComputedSeasonsFunctions(currentStorageService storageService, folder string, getID athleteIDFunc) computedSeasonsFetchFunc {
+func getComputedSeasonsFunctions(currentStorageService storageService, folder string, getID athleteIDFunc, getCompetitions competitionByNamesFunc) computedSeasonsFetchFunc {
 	fetch := func()([]*computedSeason, error){
 		contents, err := currentStorageService.ReadFolder(folder, `season_\d{4}.json`)
 		if err != nil {
@@ -60,7 +60,7 @@ func getComputedSeasonsFunctions(currentStorageService storageService, folder st
 			if err != nil {
 				return nil, err
 			}
-			computed, err := computeSeasonForFetch(&scrapedFetch, getID)
+			computed, err := computeSeasonForFetch(&scrapedFetch, getID, getCompetitions)
 			if err != nil {
 				return nil, err
 			}

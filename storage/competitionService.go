@@ -25,6 +25,8 @@ var (
 type competitionService interface {
 	Start(element seasonSyncElement)
 	List() ([]*competition, error)
+	CompetitionByNames(eventName, courseName string) (competitionAndCourse, error)
+	//CompetitionsForSeason(season int) []*competition
 }
 
 func newCompetitionService(persist competitionPersistFunc, fetch competitionFetchFunc) competitionService {
@@ -92,6 +94,36 @@ func (c *competitionServiceImpl) init(fetch competitionFetchFunc) {
 	for _, co := range l {
 		c.competitions[co.ID] = co
 	}
+}
+
+func (c *competitionServiceImpl) CompetitionByNames(eventName, courseName string) (competitionAndCourse, error) {
+	for _, comp := range c.competitions {
+		if comp.Name != eventName {
+			continue
+		}
+		for _, crs := range comp.Courses {
+			if crs.Name != courseName {
+				continue
+			}
+			res :=  competitionAndCourse{
+				competition: comp,
+				course:      &crs,
+			}
+			return res, nil
+		}
+	}
+	return competitionAndCourse{}, fmt.Errorf("could not find competition %s with course %s", eventName, courseName)
+}
+
+func (c *competitionServiceImpl) CompetitionsForSeason(season int) []*competition {
+	s := fmt.Sprintf("%d", season)
+	var result []*competition
+	for k, comp := range c.competitions {
+		if k[0:4] == s {
+			result = append(result, comp)
+		}
+	}
+	return result
 }
 
 func makeCompetitionID(dt time.Time) string {

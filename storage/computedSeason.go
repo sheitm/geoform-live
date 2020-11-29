@@ -2,26 +2,13 @@ package storage
 
 import (
 	"github.com/sheitm/ofever/scrape"
+	"log"
 	"sort"
 )
 
-type athleteIDFunc func(string)string
-
-type placementByOfficialPoints []*computedAthlete
-
-func (a placementByOfficialPoints) Len() int           { return len(a) }
-func (a placementByOfficialPoints) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a placementByOfficialPoints) Less(i, j int) bool { return a[i].PointsOfficial > a[j].PointsOfficial }
-
-type placementByTotalPoints []*computedAthlete
-
-func (a placementByTotalPoints) Len() int           { return len(a) }
-func (a placementByTotalPoints) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a placementByTotalPoints) Less(i, j int) bool { return a[i].PointsTotal > a[j].PointsTotal }
-
-func computeSeasonForFetch(f *scrape.SeasonFetch, getID athleteIDFunc) (*computedSeason, error) {
+func computeSeasonForFetch(f *scrape.SeasonFetch, getID athleteIDFunc, getCompetition competitionByNamesFunc) (*computedSeason, error) {
 	cs := &computedSeason{}
-	cs.init(f, getID)
+	cs.init(f, getID, getCompetition)
 	cs.computePointsAndPlacements()
 	return cs, nil
 }
@@ -29,6 +16,7 @@ func computeSeasonForFetch(f *scrape.SeasonFetch, getID athleteIDFunc) (*compute
 type computedSeasonDTO struct {
 	Year             int                `json:"year"`
 	Athletes         []*computedAthlete `json:"athletes"`
+	Competitions     []*competition     `json:"competitions"`
 	EventsCount      int                `json:"events_count"`
 	ValidEventsCount int                `json:"valid_events_count"`
 }
@@ -36,6 +24,7 @@ type computedSeasonDTO struct {
 type computedSeason struct {
 	Year             int                         `json:"year"`
 	Athletes         map[string]*computedAthlete `json:"athletes"`
+	Competitions     []*competition              `json:"competitions"`
 	EventsCount      int                         `json:"events_count"`
 	ValidEventsCount int                         `json:"valid_events_count"`
 }
@@ -45,6 +34,7 @@ func (c *computedSeason) dto() *computedSeasonDTO {
 		Year:             c.Year,
 		Athletes:         c.athleteSlice(),
 		EventsCount:      c.EventsCount,
+		Competitions:     c.Competitions,
 		ValidEventsCount: c.ValidEventsCount,
 	}
 }
@@ -84,9 +74,10 @@ func (c *computedSeason) officialEventCount() int {
 	return oec
 }
 
-func (c *computedSeason) init(fetch *scrape.SeasonFetch, getID athleteIDFunc) {
+func (c *computedSeason) init(fetch *scrape.SeasonFetch, getID athleteIDFunc, getCompetition competitionByNamesFunc) {
 	validEventCount := 0
 	c.Year = fetch.Year
+	competitions := map[string]*competition{}
 	athletes := map[string]*computedAthlete{}
 	for _, result := range fetch.Results {
 		if result.Event == nil {
@@ -96,8 +87,12 @@ func (c *computedSeason) init(fetch *scrape.SeasonFetch, getID athleteIDFunc) {
 			continue
 		}
 		validEventCount++
-		eventName := result.Event.Name
 		for _, course := range result.Event.Courses {
+			compAndCourse, err := getCompetition(result.Event.Name, course.Name)
+			if err != nil {
+				log.Fatal(err)
+			}
+			competitions[compAndCourse.competition.ID] = compAndCourse.competition
 			if course.Results == nil {
 				continue
 			}
@@ -113,8 +108,8 @@ func (c *computedSeason) init(fetch *scrape.SeasonFetch, getID athleteIDFunc) {
 					athletes[athlete.Name] = athlete
 				}
 				res := athleteResult{
-					Event:        eventName,
-					Course:       course.Name,
+					Event:        compAndCourse.competition.ID,
+					Course:       compAndCourse.course.ID,
 					Disqualified: r.Disqualified,
 					Placement:    r.Placement,
 					ElapsedTime:  r.ElapsedTime,
@@ -127,4 +122,12 @@ func (c *computedSeason) init(fetch *scrape.SeasonFetch, getID athleteIDFunc) {
 	c.Athletes = athletes
 	c.EventsCount = len(fetch.Results)
 	c.ValidEventsCount = validEventCount
+
+	var comps []*competition
+	for _, comp := range competitions {
+		comps = append(comps, comp)
+	}
+	c.Competitions = comps
 }
+
+

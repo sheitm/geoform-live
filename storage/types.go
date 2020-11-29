@@ -13,6 +13,21 @@ type computedSeasonFetchFunc func(int)(*computedSeason, error)
 type competitionPersistFunc func([]*competition)
 type competitionFetchFunc func()([]*competition, error)
 
+type athleteIDFunc func(string)string
+type competitionByNamesFunc func(eventName, courseName string) (competitionAndCourse, error)
+
+type placementByOfficialPoints []*computedAthlete
+
+func (a placementByOfficialPoints) Len() int           { return len(a) }
+func (a placementByOfficialPoints) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a placementByOfficialPoints) Less(i, j int) bool { return a[i].PointsOfficial > a[j].PointsOfficial }
+
+type placementByTotalPoints []*computedAthlete
+
+func (a placementByTotalPoints) Len() int           { return len(a) }
+func (a placementByTotalPoints) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a placementByTotalPoints) Less(i, j int) bool { return a[i].PointsTotal > a[j].PointsTotal }
+
 type httpHandler interface {
 	Path() string
 	ServeHTTP(http.ResponseWriter, *http.Request)
@@ -99,4 +114,9 @@ type course struct {
 	Info       string  `json:"info"`
 	Length     float64 `json:"length"`
 	CourseType string  `json:"course_type"` // long, medium, short, newbie
+}
+
+type competitionAndCourse struct {
+	competition *competition
+	course      *course
 }
