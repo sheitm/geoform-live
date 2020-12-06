@@ -85,12 +85,13 @@ func (a *computedAthlete) computePoints(officialCount int) {
 }
 
 type athleteResult struct {
-	Event        string        `json:"event"`
-	Course       string        `json:"course"`
-	Disqualified bool          `json:"disqualified"`
-	Placement    int           `json:"placement"`
-	ElapsedTime  time.Duration `json:"elapsed_time"`
-	Points       float64       `json:"points"`
+	Event              string  `json:"event"`
+	Course             string  `json:"course"`
+	Disqualified       bool    `json:"disqualified"`
+	Placement          int     `json:"placement"`
+	ElapsedTimeSeconds int     `json:"elapsed_time"`
+	ElapsedTimeDisplay string  `json:"elapsed_time_display"`
+	Points             float64 `json:"points"`
 }
 
 type competition struct {

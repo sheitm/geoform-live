@@ -1,9 +1,12 @@
 package storage
 
 import (
+	"fmt"
 	"github.com/sheitm/ofever/scrape"
 	"log"
 	"sort"
+	"strconv"
+	"time"
 )
 
 func computeSeasonForFetch(f *scrape.SeasonFetch, getID athleteIDFunc, getCompetition competitionByNamesFunc) (*computedSeason, error) {
@@ -107,13 +110,15 @@ func (c *computedSeason) init(fetch *scrape.SeasonFetch, getID athleteIDFunc, ge
 					}
 					athletes[athlete.Name] = athlete
 				}
+				seconds, displayString := getElapsedTimeInfo(r.ElapsedTime)
 				res := athleteResult{
-					Event:        compAndCourse.competition.ID,
-					Course:       compAndCourse.course.ID,
-					Disqualified: r.Disqualified,
-					Placement:    r.Placement,
-					ElapsedTime:  r.ElapsedTime,
-					Points:       r.Points,
+					Event:              compAndCourse.competition.ID,
+					Course:             compAndCourse.course.ID,
+					Disqualified:       r.Disqualified,
+					Placement:          r.Placement,
+					ElapsedTimeSeconds: seconds,
+					ElapsedTimeDisplay: displayString,
+					Points:             r.Points,
 				}
 				athlete.Results = append(athlete.Results, res)
 			}
@@ -128,6 +133,21 @@ func (c *computedSeason) init(fetch *scrape.SeasonFetch, getID athleteIDFunc, ge
 		comps = append(comps, comp)
 	}
 	c.Competitions = comps
+}
+
+func getElapsedTimeInfo(d time.Duration) (int, string) {
+	ss := fmt.Sprintf("%.0f", d.Seconds())
+	totalSeconds, _ := strconv.Atoi(ss)
+
+	d = d.Round(time.Second)
+	h := d / time.Hour
+	d -= h * time.Hour
+	m := d / time.Minute
+	d -= m * time.Minute
+	s := d / time.Second
+
+
+	return totalSeconds, fmt.Sprintf("%d:%02d:%02d", h, m, s)
 }
 
 
