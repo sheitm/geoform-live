@@ -17,28 +17,25 @@ func computeSeasonForFetch(f *scrape.SeasonFetch, getID athleteIDFunc, getCompet
 }
 
 type computedSeasonDTO struct {
-	Year             int                `json:"year"`
-	Athletes         []*computedAthlete `json:"athletes"`
-	Competitions     []*competition     `json:"competitions"`
-	EventsCount      int                `json:"events_count"`
-	ValidEventsCount int                `json:"valid_events_count"`
+	Year         int                `json:"year"`
+	Athletes     []*computedAthlete `json:"athletes"`
+	Competitions []*competition     `json:"competitions"`
+	Statistics   *seasonStatistics  `json:"statistics"`
 }
 
 type computedSeason struct {
 	Year             int                         `json:"year"`
 	Athletes         map[string]*computedAthlete `json:"athletes"`
 	Competitions     []*competition              `json:"competitions"`
-	EventsCount      int                         `json:"events_count"`
-	ValidEventsCount int                         `json:"valid_events_count"`
+	Statistics       *seasonStatistics           `json:"statistics"`
 }
 
 func (c *computedSeason) dto() *computedSeasonDTO {
 	return &computedSeasonDTO{
-		Year:             c.Year,
-		Athletes:         c.athleteSlice(),
-		EventsCount:      c.EventsCount,
-		Competitions:     c.Competitions,
-		ValidEventsCount: c.ValidEventsCount,
+		Year:         c.Year,
+		Athletes:     c.athleteSlice(),
+		Statistics:   c.Statistics,
+		Competitions: c.Competitions,
 	}
 }
 
@@ -70,8 +67,8 @@ func (c *computedSeason) athleteSlice() []*computedAthlete {
 }
 
 func (c *computedSeason) officialEventCount() int {
-	oec := c.ValidEventsCount / 2
-	if c.ValidEventsCount % 2 != 0 {
+	oec := c.Statistics.ValidEventsCount / 2
+	if c.Statistics.ValidEventsCount % 2 != 0 {
 		oec++
 	}
 	return oec
@@ -82,6 +79,8 @@ func (c *computedSeason) init(fetch *scrape.SeasonFetch, getID athleteIDFunc, ge
 	c.Year = fetch.Year
 	competitions := map[string]*competition{}
 	athletes := map[string]*computedAthlete{}
+	totalStarts := 0
+	totalDuration := 0 * time.Second
 	for _, result := range fetch.Results {
 		if result.Event == nil {
 			continue
@@ -100,6 +99,8 @@ func (c *computedSeason) init(fetch *scrape.SeasonFetch, getID athleteIDFunc, ge
 				continue
 			}
 			for _, r := range course.Results {
+				totalStarts++
+				totalDuration = totalDuration + r.ElapsedTime
 				var athlete *computedAthlete
 				var ok bool
 				if athlete, ok = athletes[r.Athlete]; !ok {
@@ -125,8 +126,16 @@ func (c *computedSeason) init(fetch *scrape.SeasonFetch, getID athleteIDFunc, ge
 		}
 	}
 	c.Athletes = athletes
-	c.EventsCount = len(fetch.Results)
-	c.ValidEventsCount = validEventCount
+
+	secs, displayTime := getElapsedTimeInfo(totalDuration)
+	c.Statistics = &seasonStatistics{
+		EventsCount:             len(fetch.Results),
+		ValidEventsCount:        validEventCount,
+		StartsCount:             totalStarts,
+		AthletesCount:           len(athletes),
+		TotalElapsedTimeSeconds: secs,
+		TotalElapsedTimeDisplay: displayTime,
+	}
 
 	var comps []*competition
 	for _, comp := range competitions {

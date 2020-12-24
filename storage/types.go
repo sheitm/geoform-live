@@ -117,6 +117,15 @@ type course struct {
 	CourseType string  `json:"course_type"` // long, medium, short, newbie
 }
 
+type seasonStatistics struct {
+	EventsCount             int    `json:"event_count"`
+	ValidEventsCount        int    `json:"held_events_count"`
+	StartsCount             int    `json:"starts_count"`
+	AthletesCount           int    `json:"athletes_count"`
+	TotalElapsedTimeSeconds int    `json:"total_elapsed_time"`
+	TotalElapsedTimeDisplay string `json:"total_elapsed_time_display"`
+}
+
 type competitionAndCourse struct {
 	competition *competition
 	course      *course
