@@ -63,6 +63,10 @@ func (s *seasonScraper) scrape(url string, resultChan chan<- *SeasonFetch) {
 
 	wg.Wait()
 	fetch.Results = results
+
+	// TODO: Figure out how to set series.
+	fetch.Series = "geoform"
+
 	resultChan <- fetch
 }
 
