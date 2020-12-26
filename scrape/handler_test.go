@@ -94,9 +94,13 @@ func Test_handler_Handle(t *testing.T) {
 		}()
 	}
 	eventChan := make(chan *types.ScrapeEvent)
+	sequenceTrigger := make(chan interface{})
+	sequenceDone := make(chan struct{})
 	h := &handler{
-		eventChan: eventChan,
-		starter:   starter,
+		eventChan:       eventChan,
+		starter:         starter,
+		sequenceTrigger: sequenceTrigger,
+		finalDone:       sequenceDone,
 	}
 
 	// Act
@@ -104,6 +108,14 @@ func Test_handler_Handle(t *testing.T) {
 		re := <- ech
 		re.DoneChan <- nil
 	}(eventChan)
+
+	triggered := false
+	go func(trigger <-chan interface{}, dc chan<- struct{}) {
+		<-trigger
+		triggered = true
+		dc <- struct{}{}
+
+	}(sequenceTrigger, sequenceDone)
 
 	roundTrip := h.Handle(req)
 
@@ -119,5 +131,8 @@ func Test_handler_Handle(t *testing.T) {
 	}
 	if receivedYear != 2020 {
 		t.Errorf("unexpected year received, got %d", receivedYear)
+	}
+	if !triggered {
+		t.Error("sequence wasn't triggered")
 	}
 }

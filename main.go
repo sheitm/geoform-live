@@ -6,6 +6,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sheitm/ofever/persist"
 	"github.com/sheitm/ofever/scrape"
+	"github.com/sheitm/ofever/sequence"
 	"github.com/sheitm/ofever/types"
 	"log"
 	"net/http"
@@ -22,8 +23,14 @@ func main(){
 	logChannels := telemetry.StartEmpty()
 	eventChan := make(chan *types.ScrapeEvent)
 
+	// Start sequencer
+	sequenceTrigger := make(chan interface{})
+	sequenceDone := make(chan struct{})
+	sequenceAdder := sequence.Start(sequenceTrigger, sequenceDone)
+	_ = sequenceAdder
+
 	// Start scraping
-	scrapeHandler := scrape.Handler(eventChan)
+	scrapeHandler := scrape.Handler(eventChan, sequenceTrigger, sequenceDone)
 	httpHandler := telemetry.Wrap(scrapeHandler, logChannels)
 	http.Handle("/scrape/", httpHandler)
 
