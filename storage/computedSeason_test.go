@@ -3,7 +3,7 @@ package storage
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/sheitm/ofever/scrape"
+	"github.com/sheitm/ofever/types"
 	"testing"
 	"time"
 )
@@ -31,7 +31,7 @@ func Test_computeSeasonForFetch(t *testing.T) {
 		return cac, nil
 	}
 
-	var f scrape.SeasonFetch
+	var f types.SeasonFetch
 	err := json.Unmarshal([]byte(jsonSeason2019), &f)
 	if err != nil {
 		t.Errorf("while unmarshaling season2019, %v", err)
@@ -82,7 +82,7 @@ func Test_computeSeasonForFetch(t *testing.T) {
 
 func Test_computeSeasonForFetch_checkPointsAndPlacements(t *testing.T) {
 	// Arrange
-	var fetch scrape.SeasonFetch
+	var fetch types.SeasonFetch
 
 	err := json.Unmarshal([]byte(jsonSeason2020), &fetch)
 	if err != nil {

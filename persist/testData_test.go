@@ -2,12 +2,12 @@ package persist
 
 import (
 	"encoding/json"
-	"github.com/sheitm/ofever/scrape"
+	"github.com/sheitm/ofever/types"
 	"testing"
 )
 
 func Test_parse(t *testing.T) {
-	var fetch scrape.SeasonFetch
+	var fetch types.SeasonFetch
 
 	err := json.Unmarshal([]byte(jsonSeason2019), &fetch)
 	if err != nil {

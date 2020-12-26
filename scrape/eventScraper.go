@@ -2,7 +2,6 @@ package scrape
 
 import (
 	"fmt"
-	"github.com/sheitm/ofever/contracts"
 	"github.com/sheitm/ofever/types"
 	"golang.org/x/net/html"
 	"net/http"
@@ -31,7 +30,7 @@ type eventScraper struct {
 	row    *tableRow
 }
 
-func (s *eventScraper) Scrape(url string) (*contracts.Event, error) {
+func (s *eventScraper) Scrape(url string) (*types.Event, error) {
 	resp, err := s.client.Get(url)
 	if err != nil {
 		return nil, err
@@ -48,7 +47,7 @@ func (s *eventScraper) Scrape(url string) (*contracts.Event, error) {
 		return nil, err
 	}
 
-	event := &contracts.Event{
+	event := &types.Event{
 		URL:        url,
 		Number:     s.row.number(),
 		URLInvite:  s.row.urlInvite(),
@@ -86,7 +85,7 @@ func (s *eventScraper) Scrape(url string) (*contracts.Event, error) {
 				if err != nil {
 					parserErrorText = err.Error()
 				}
-				course := &contracts.Course{
+				course := &types.Course{
 					Name:       nextCourseName,
 					Info:       "",
 					Results:    results,

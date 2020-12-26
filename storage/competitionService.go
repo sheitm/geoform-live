@@ -3,7 +3,6 @@ package storage
 import (
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/sheitm/ofever/contracts"
 	"github.com/sheitm/ofever/types"
 	"log"
 	"regexp"
@@ -131,7 +130,7 @@ func makeCompetitionID(dt time.Time) string {
 	return fmt.Sprintf("%d%02d%02d-%s", dt.Year(), dt.Month(), dt.Day(), guid.String()[0:4])
 }
 
-func getCompetition(id string, e *contracts.Event) *competition {
+func getCompetition(id string, e *types.Event) *competition {
 	comp := &competition{
 		ID:          id,
 		Number:      e.Number,

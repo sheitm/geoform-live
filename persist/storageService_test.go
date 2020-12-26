@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/3lvia/telemetry-go"
-	"github.com/sheitm/ofever/scrape"
+	"github.com/sheitm/ofever/types"
 	"reflect"
 	"testing"
 )
@@ -39,25 +39,25 @@ func Test_parseBlobConnectionString(t *testing.T) {
 func Test_storageService_start(t *testing.T) {
 	// Arrange
 	logChannels := telemetry.StartEmpty()
-	sentFetch := &scrape.SeasonFetch{
+	sentFetch := &types.SeasonFetch{
 		Series:  "geoform",
 		Year:    2020,
 	}
-	var receivedFetch *scrape.SeasonFetch
+	var receivedFetch *types.SeasonFetch
 	service := &storageService{
 		logChannels: logChannels,
-		save: func(ctx context.Context, config map[string]string, fetch *scrape.SeasonFetch) error {
+		save: func(ctx context.Context, config map[string]string, fetch *types.SeasonFetch) error {
 			receivedFetch = fetch
 			return nil
 		},
 	}
 
-	eChan := make(chan *scrape.Event)
+	eChan := make(chan *types.ScrapeEvent)
 	doneChan := make(chan error)
 
 	// Act
 	go service.start(eChan)
-	e := &scrape.Event{
+	e := &types.ScrapeEvent{
 		DoneChan: doneChan,
 		Fetch:    sentFetch,
 	}
@@ -76,23 +76,23 @@ func Test_storageService_start(t *testing.T) {
 func Test_storageService_start_error(t *testing.T) {
 	// Arrange
 	logChannels := telemetry.StartEmpty()
-	sentFetch := &scrape.SeasonFetch{
+	sentFetch := &types.SeasonFetch{
 		Series:  "geoform",
 		Year:    2020,
 	}
 	service := &storageService{
 		logChannels: logChannels,
-		save: func(ctx context.Context, config map[string]string, fetch *scrape.SeasonFetch) error {
+		save: func(ctx context.Context, config map[string]string, fetch *types.SeasonFetch) error {
 			return errors.New("some failure")
 		},
 	}
 
-	eChan := make(chan *scrape.Event)
+	eChan := make(chan *types.ScrapeEvent)
 	doneChan := make(chan error)
 
 	// Act
 	go service.start(eChan)
-	e := &scrape.Event{
+	e := &types.ScrapeEvent{
 		DoneChan: doneChan,
 		Fetch:    sentFetch,
 	}

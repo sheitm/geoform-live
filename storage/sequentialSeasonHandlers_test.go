@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/sheitm/ofever/scrape"
+	"github.com/sheitm/ofever/types"
 	"sync"
 	"testing"
 	"time"
@@ -26,9 +26,9 @@ func Test_sequentialSeasonHandlers_Start(t *testing.T) {
 	d3 := &testDep{done: done}
 	seq.Add(d3)
 
-	seasonChan := make(chan *scrape.SeasonFetch)
+	seasonChan := make(chan *types.SeasonFetch)
 
-	fetch := &scrape.SeasonFetch{Year: 2012}
+	fetch := &types.SeasonFetch{Year: 2012}
 
 	// Act
 	seq.Start(seasonChan)
@@ -55,13 +55,13 @@ func Test_sequentialSeasonHandlers_Start(t *testing.T) {
 }
 
 type testDep struct {
-	receivedFetch *scrape.SeasonFetch
+	receivedFetch *types.SeasonFetch
 	when          int64
 	done          func()
 }
 
 func (t *testDep) Start(element seasonSyncElement) {
-	go func(sc <-chan *scrape.SeasonFetch, dc chan<- struct{}){
+	go func(sc <-chan *types.SeasonFetch, dc chan<- struct{}){
 		for {
 			fetch := <- sc
 			t.receivedFetch = fetch
