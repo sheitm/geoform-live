@@ -1,6 +1,7 @@
 package persist
 
 import (
+	"context"
 	"errors"
 	"github.com/3lvia/telemetry-go"
 	"github.com/sheitm/ofever/scrape"
@@ -45,18 +46,18 @@ func Test_storageService_start(t *testing.T) {
 	var receivedFetch *scrape.SeasonFetch
 	service := &storageService{
 		logChannels: logChannels,
-		save: func(fetch *scrape.SeasonFetch) error {
+		save: func(ctx context.Context, config map[string]string, fetch *scrape.SeasonFetch) error {
 			receivedFetch = fetch
 			return nil
 		},
 	}
 
-	eChan := make(chan *Event)
+	eChan := make(chan *scrape.Event)
 	doneChan := make(chan error)
 
 	// Act
 	go service.start(eChan)
-	e := &Event{
+	e := &scrape.Event{
 		DoneChan: doneChan,
 		Fetch:    sentFetch,
 	}
@@ -81,17 +82,17 @@ func Test_storageService_start_error(t *testing.T) {
 	}
 	service := &storageService{
 		logChannels: logChannels,
-		save: func(fetch *scrape.SeasonFetch) error {
+		save: func(ctx context.Context, config map[string]string, fetch *scrape.SeasonFetch) error {
 			return errors.New("some failure")
 		},
 	}
 
-	eChan := make(chan *Event)
+	eChan := make(chan *scrape.Event)
 	doneChan := make(chan error)
 
 	// Act
 	go service.start(eChan)
-	e := &Event{
+	e := &scrape.Event{
 		DoneChan: doneChan,
 		Fetch:    sentFetch,
 	}
