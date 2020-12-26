@@ -2,6 +2,7 @@ package scrape
 
 import (
 	"fmt"
+	"github.com/sheitm/ofever/types"
 	"net/http"
 	"testing"
 	"time"
@@ -81,25 +82,25 @@ func Test_handler_Handle(t *testing.T) {
 
 	receivedURL := ""
 	receivedYear := 0
-	sentFetch := &SeasonFetch{
+	sentFetch := &types.SeasonFetch{
 		Year:    2020,
 		URL:     "",
 	}
-	starter := func(url string, year int, ch chan<- *SeasonFetch) {
+	starter := func(url string, year int, ch chan<- *types.SeasonFetch) {
 		receivedURL = url
 		receivedYear = year
 		go func() {
 			ch <- sentFetch
 		}()
 	}
-	eventChan := make(chan *Event)
+	eventChan := make(chan *types.Event)
 	h := &handler{
 		eventChan: eventChan,
 		starter:   starter,
 	}
 
 	// Act
-	go func(ech <-chan *Event) {
+	go func(ech <-chan *types.Event) {
 		re := <- ech
 		re.DoneChan <- nil
 	}(eventChan)

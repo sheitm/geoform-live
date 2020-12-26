@@ -2,13 +2,13 @@ package main
 
 import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/sheitm/ofever/scrape"
 	"github.com/sheitm/ofever/storage"
+	"github.com/sheitm/ofever/types"
 	"log"
 	"net/http"
 )
 
-func startServer(port string, seasonChan chan<- *scrape.SeasonFetch){
+func startServer(port string, seasonChan chan<- *types.SeasonFetch){
 
 
 	http.Handle("/metrics", promhttp.Handler())
@@ -27,7 +27,7 @@ func startServer(port string, seasonChan chan<- *scrape.SeasonFetch){
 	}
 }
 
-type startScrapeFunc func(string, int, chan<- *scrape.SeasonFetch)
+type startScrapeFunc func(string, int, chan<- *types.SeasonFetch)
 
 
 // https://ilgeoform.no/rankinglop/

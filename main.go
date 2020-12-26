@@ -6,10 +6,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sheitm/ofever/persist"
 	"github.com/sheitm/ofever/scrape"
-	"github.com/sheitm/ofever/storage"
+	"github.com/sheitm/ofever/types"
 	"log"
 	"net/http"
-	"os"
 )
 
 func main(){
@@ -21,7 +20,7 @@ func main(){
 	}
 
 	logChannels := telemetry.StartEmpty()
-	eventChan := make(chan *scrape.Event)
+	eventChan := make(chan *types.Event)
 
 	// Start scraping
 	scrapeHandler := scrape.Handler(eventChan)
@@ -38,18 +37,4 @@ func main(){
 	if err := http.ListenAndServe(pp, nil); err != nil {
 		log.Fatal(err)
 	}
-}
-//http://localhost:2112/scrape/2019
-
-func old() {
-	storageDirectory := os.Getenv("STORAGE_DIRECTORY")
-	if storageDirectory == "" {
-		log.Fatal("environment variable STORAGE_DIRECTORY must be set")
-	}
-	seasonChan := make(chan *scrape.SeasonFetch)
-
-	storage.Start(storageDirectory, seasonChan)
-
-	// startServer must be last line
-	startServer("2112", seasonChan)
 }

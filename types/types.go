@@ -1,4 +1,4 @@
-package scrape
+package types
 
 import "github.com/sheitm/ofever/contracts"
 

@@ -2,6 +2,7 @@ package scrape
 
 import (
 	"fmt"
+	"github.com/sheitm/ofever/types"
 	"golang.org/x/net/html"
 	"net/http"
 	"strconv"
@@ -12,12 +13,12 @@ import (
 
 // StartSeason scrapes all events that can be found via the given url which is assumed to be to a page with references
 // to all events in a table.
-func StartSeason(url string, year int, resultChan chan<- *SeasonFetch) {
+func StartSeason(url string, year int, resultChan chan<- *types.SeasonFetch) {
 	client := &http.Client{}
 	startSeason(url, year, resultChan, client)
 }
 
-func startSeason(url string, year int, resultChan chan<- *SeasonFetch, client *http.Client) {
+func startSeason(url string, year int, resultChan chan<- *types.SeasonFetch, client *http.Client) {
 	scraper := &seasonScraper{
 		client: client,
 		year:   year,
@@ -30,8 +31,8 @@ type seasonScraper struct {
 	year   int
 }
 
-func (s *seasonScraper) scrape(url string, resultChan chan<- *SeasonFetch) {
-	fetch := &SeasonFetch{
+func (s *seasonScraper) scrape(url string, resultChan chan<- *types.SeasonFetch) {
+	fetch := &types.SeasonFetch{
 		URL:  url,
 		Year: s.year,
 	}
@@ -43,7 +44,7 @@ func (s *seasonScraper) scrape(url string, resultChan chan<- *SeasonFetch) {
 		return
 	}
 
-	internalResultChan := make(chan *Result)
+	internalResultChan := make(chan *types.Result)
 	for _, row := range rows {
 		startEventScrape(row, internalResultChan, s.client)
 	}
@@ -51,9 +52,9 @@ func (s *seasonScraper) scrape(url string, resultChan chan<- *SeasonFetch) {
 	wg := &sync.WaitGroup{}
 	wg.Add(len(rows))
 
-	var results []*Result
+	var results []*types.Result
 
-	go func(in <-chan *Result, wg *sync.WaitGroup){
+	go func(in <-chan *types.Result, wg *sync.WaitGroup){
 		for {
 			r := <- in
 			results = append(results, r)

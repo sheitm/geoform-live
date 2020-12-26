@@ -2,7 +2,7 @@ package storage
 
 import (
 	"fmt"
-	"github.com/sheitm/ofever/scrape"
+	"github.com/sheitm/ofever/types"
 	"log"
 	"sync"
 )
@@ -31,7 +31,7 @@ type computeServiceImpl struct {
 }
 
 func (c *computeServiceImpl) Start(element seasonSyncElement) {
-	go func(sc <-chan *scrape.SeasonFetch, dc chan<- struct{}){
+	go func(sc <-chan *types.SeasonFetch, dc chan<- struct{}){
 		for {
 			fetch := <- sc
 			cs, err := computeSeasonForFetch(fetch, c.getAthleteID, c.getCompetitionByName)

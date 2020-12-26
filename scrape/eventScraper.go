@@ -3,15 +3,16 @@ package scrape
 import (
 	"fmt"
 	"github.com/sheitm/ofever/contracts"
+	"github.com/sheitm/ofever/types"
 	"golang.org/x/net/html"
 	"net/http"
 	"strings"
 )
 
-func startEventScrape(row *tableRow,  resultChan chan<- *Result, client *http.Client) {
-	go func(row *tableRow, resultChan chan<- *Result, client *http.Client) {
+func startEventScrape(row *tableRow,  resultChan chan<- *types.Result, client *http.Client) {
+	go func(row *tableRow, resultChan chan<- *types.Result, client *http.Client) {
 		url := row.eventURL()
-		res := &Result{URL: url}
+		res := &types.Result{URL: url}
 		scraper := &eventScraper{
 			client: &http.Client{},
 			row:    row,

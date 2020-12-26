@@ -2,14 +2,14 @@ package storage
 
 import (
 	"fmt"
-	"github.com/sheitm/ofever/scrape"
+	"github.com/sheitm/ofever/types"
 	"log"
 	"sort"
 	"strconv"
 	"time"
 )
 
-func computeSeasonForFetch(f *scrape.SeasonFetch, getID athleteIDFunc, getCompetition competitionByNamesFunc) (*computedSeason, error) {
+func computeSeasonForFetch(f *types.SeasonFetch, getID athleteIDFunc, getCompetition competitionByNamesFunc) (*computedSeason, error) {
 	cs := &computedSeason{}
 	cs.init(f, getID, getCompetition)
 	cs.computePointsAndPlacements()
@@ -74,7 +74,7 @@ func (c *computedSeason) officialEventCount() int {
 	return oec
 }
 
-func (c *computedSeason) init(fetch *scrape.SeasonFetch, getID athleteIDFunc, getCompetition competitionByNamesFunc) {
+func (c *computedSeason) init(fetch *types.SeasonFetch, getID athleteIDFunc, getCompetition competitionByNamesFunc) {
 	validEventCount := 0
 	c.Year = fetch.Year
 	competitions := map[string]*competition{}

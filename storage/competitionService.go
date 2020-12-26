@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/sheitm/ofever/contracts"
-	"github.com/sheitm/ofever/scrape"
+	"github.com/sheitm/ofever/types"
 	"log"
 	"regexp"
 	"strconv"
@@ -44,7 +44,7 @@ type competitionServiceImpl struct {
 }
 
 func (c *competitionServiceImpl) Start(element seasonSyncElement) {
-	go func(sc <-chan *scrape.SeasonFetch, dc chan<- struct{}){
+	go func(sc <-chan *types.SeasonFetch, dc chan<- struct{}){
 		for {
 			fetch := <- sc
 			anyChange := false

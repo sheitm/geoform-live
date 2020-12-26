@@ -7,7 +7,7 @@ import (
 	"github.com/3lvia/hn-config-lib-go/vault"
 	"github.com/3lvia/telemetry-go"
 	"github.com/Azure/azure-storage-blob-go/azblob"
-	"github.com/sheitm/ofever/scrape"
+	"github.com/sheitm/ofever/types"
 	"net/url"
 	"os"
 	"strings"
@@ -15,7 +15,7 @@ import (
 
 const eventSeasonSaved = "Season_saved"
 
-type saveFunc func(context.Context, map[string]string, *scrape.SeasonFetch) error
+type saveFunc func(context.Context, map[string]string, *types.SeasonFetch) error
 
 func newStorageService(v vault.SecretsManager, logChannels telemetry.LogChans) (*storageService, error) {
 	// TODO: Add vault integration
@@ -36,7 +36,7 @@ type storageService struct {
 	logChannels    telemetry.LogChans
 }
 
-func (s *storageService) start(eventChan <-chan *scrape.Event) {
+func (s *storageService) start(eventChan <-chan *types.Event) {
 	for {
 		e := <- eventChan
 		fetch := e.Fetch
@@ -60,7 +60,7 @@ func (s *storageService) start(eventChan <-chan *scrape.Event) {
 	}
 }
 
-func saveFetch(ctx context.Context, config map[string]string, fetch *scrape.SeasonFetch) error {
+func saveFetch(ctx context.Context, config map[string]string, fetch *types.SeasonFetch) error {
 	accountName := config["AccountName"]
 	accountKey := config["AccountKey"]
 	credentials, err := azblob.NewSharedKeyCredential(accountName, accountKey)
