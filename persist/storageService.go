@@ -36,7 +36,7 @@ type storageService struct {
 	logChannels    telemetry.LogChans
 }
 
-func (s *storageService) start(eventChan <-chan *types.Event) {
+func (s *storageService) start(eventChan <-chan *types.ScrapeEvent) {
 	for {
 		e := <- eventChan
 		fetch := e.Fetch

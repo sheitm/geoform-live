@@ -9,10 +9,10 @@ import (
 	"strings"
 )
 
-func startEventScrape(row *tableRow,  resultChan chan<- *types.Result, client *http.Client) {
-	go func(row *tableRow, resultChan chan<- *types.Result, client *http.Client) {
+func startEventScrape(row *tableRow,  resultChan chan<- *types.ScrapeResult, client *http.Client) {
+	go func(row *tableRow, resultChan chan<- *types.ScrapeResult, client *http.Client) {
 		url := row.eventURL()
-		res := &types.Result{URL: url}
+		res := &types.ScrapeResult{URL: url}
 		scraper := &eventScraper{
 			client: &http.Client{},
 			row:    row,

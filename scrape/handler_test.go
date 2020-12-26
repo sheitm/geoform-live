@@ -93,14 +93,14 @@ func Test_handler_Handle(t *testing.T) {
 			ch <- sentFetch
 		}()
 	}
-	eventChan := make(chan *types.Event)
+	eventChan := make(chan *types.ScrapeEvent)
 	h := &handler{
 		eventChan: eventChan,
 		starter:   starter,
 	}
 
 	// Act
-	go func(ech <-chan *types.Event) {
+	go func(ech <-chan *types.ScrapeEvent) {
 		re := <- ech
 		re.DoneChan <- nil
 	}(eventChan)

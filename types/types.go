@@ -7,12 +7,12 @@ type SeasonFetch struct {
 	Series  string    `json:"series"`
 	Year    int       `json:"year"`
 	URL     string    `json:"url"`
-	Results []*Result `json:"results"`
+	Results []*ScrapeResult `json:"results"`
 	Error   string    `json:"error"`
 }
 
-// Result is the result of a single event scraping session.
-type Result struct {
+// ScrapeResult is the result of a single event scraping session.
+type ScrapeResult struct {
 	// URL is the provided address to the page containing the results for the event.
 	URL string `json:"url"`
 
@@ -23,8 +23,8 @@ type Result struct {
 	Error string `json:"error"`
 }
 
-// Event is used to signal that a season fetch should be persisted.
-type Event struct {
+// ScrapeEvent is used to signal that a season fetch should be persisted.
+type ScrapeEvent struct {
 	// DoneChan used to signal back that the event is persisted. If error is not nil, it failed.
 	DoneChan chan<- error
 

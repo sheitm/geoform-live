@@ -20,7 +20,7 @@ func main(){
 	}
 
 	logChannels := telemetry.StartEmpty()
-	eventChan := make(chan *types.Event)
+	eventChan := make(chan *types.ScrapeEvent)
 
 	// Start scraping
 	scrapeHandler := scrape.Handler(eventChan)

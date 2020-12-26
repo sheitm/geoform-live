@@ -44,7 +44,7 @@ func (s *seasonScraper) scrape(url string, resultChan chan<- *types.SeasonFetch)
 		return
 	}
 
-	internalResultChan := make(chan *types.Result)
+	internalResultChan := make(chan *types.ScrapeResult)
 	for _, row := range rows {
 		startEventScrape(row, internalResultChan, s.client)
 	}
@@ -52,9 +52,9 @@ func (s *seasonScraper) scrape(url string, resultChan chan<- *types.SeasonFetch)
 	wg := &sync.WaitGroup{}
 	wg.Add(len(rows))
 
-	var results []*types.Result
+	var results []*types.ScrapeResult
 
-	go func(in <-chan *types.Result, wg *sync.WaitGroup){
+	go func(in <-chan *types.ScrapeResult, wg *sync.WaitGroup){
 		for {
 			r := <- in
 			results = append(results, r)

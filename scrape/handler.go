@@ -12,7 +12,7 @@ import (
 
 const handlerName = "scrape"
 
-func Handler(eventChan chan<- *types.Event) telemetry.RequestHandler {
+func Handler(eventChan chan<- *types.ScrapeEvent) telemetry.RequestHandler {
 	return &handler{
 		eventChan: eventChan,
 		starter:   StartSeason,
@@ -22,7 +22,7 @@ func Handler(eventChan chan<- *types.Event) telemetry.RequestHandler {
 type startScrapeFunc func(string, int, chan<- *types.SeasonFetch)
 
 type handler struct {
-	eventChan chan<- *types.Event
+	eventChan chan<- *types.ScrapeEvent
 	starter   startScrapeFunc
 }
 
@@ -59,7 +59,7 @@ func (h *handler) Handle(r *http.Request) telemetry.RoundTrip {
 
 	fetch := <-sc
 	doneChan := make(chan error)
-	ev := &types.Event{
+	ev := &types.ScrapeEvent{
 		DoneChan: doneChan,
 		Fetch:    fetch,
 	}

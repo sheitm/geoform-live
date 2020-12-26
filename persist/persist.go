@@ -8,7 +8,7 @@ import (
 )
 
 // Start the internal functionality in a go routine.
-func Start(v vault.SecretsManager, eventChan <-chan *types.Event, logChannels telemetry.LogChans) {
+func Start(v vault.SecretsManager, eventChan <-chan *types.ScrapeEvent, logChannels telemetry.LogChans) {
 	service, err := newStorageService(v, logChannels)
 	if err != nil {
 		logChannels.ErrorChan <- err
