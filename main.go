@@ -4,6 +4,7 @@ import (
 	"github.com/3lvia/hn-config-lib-go/vault"
 	"github.com/3lvia/telemetry-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/sheitm/ofever/athletes"
 	"github.com/sheitm/ofever/persist"
 	"github.com/sheitm/ofever/scrape"
 	"github.com/sheitm/ofever/sequence"
@@ -23,21 +24,27 @@ func main(){
 	logChannels := telemetry.StartEmpty()
 	eventChan := make(chan *types.ScrapeEvent)
 
+	// Start persistance
+	persister := persist.Start(v, eventChan, logChannels)
+
 	// Start sequencer
 	sequenceTrigger := make(chan interface{})
 	sequenceDone := make(chan struct{})
 	sequenceAdder := sequence.Start(sequenceTrigger, sequenceDone)
-	_ = sequenceAdder
 
 	// Start scraping
 	scrapeHandler := scrape.Handler(eventChan, sequenceTrigger, sequenceDone)
 	httpHandler := telemetry.Wrap(scrapeHandler, logChannels)
 	http.Handle("/scrape/", httpHandler)
 
+	// Start athletes
+	athletesHandler := athletes.Start(sequenceAdder, persister, logChannels)
+	httpHandler = telemetry.Wrap(athletesHandler, logChannels)
+
 	// Start metrics
 	http.Handle("/metrics", promhttp.Handler())
 
-	persist.Start(v, eventChan, logChannels)
+
 
 	pp := ":" + port
 
