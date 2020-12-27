@@ -41,8 +41,6 @@ func (a *impl) start() {
 		e := <- a.seasonChan
 		fetch := e.Payload.(*types.SeasonFetch)
 
-		series := fetch.Series
-
 		results := athleteResults(fetch)
 		if results == nil {
 			e.DoneChan <- struct{}{}
@@ -54,7 +52,7 @@ func (a *impl) start() {
 			a, existed := a.cache.competitor(result.Athlete, result.Club)
 			if !existed {
 				element := &persist.Element{
-					Series:     series,
+					Series:     "athletes",
 					Data:       a,
 					PathGetter: athletePath,
 				}
@@ -72,7 +70,7 @@ func (a *impl) start() {
 
 func athletePath(e interface{}) string {
 	a := e.(*athleteWithID)
-	return fmt.Sprintf("athletes/%s.json", a.ID)
+	return fmt.Sprintf("%s.json", a.ID)
 }
 
 func athleteResults(fetch *types.SeasonFetch) []*types.Result {

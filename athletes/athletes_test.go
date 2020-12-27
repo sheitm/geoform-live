@@ -45,7 +45,7 @@ func TestStart(t *testing.T) {
 	}
 	p := ee.PathGetter(ee.Data)
 	// athletes/4d0523b4-9ad3-72d4-74f4-cd3a627e909c.json
-	if len(p) != 50 {
+	if len(p) != 41 {
 		t.Errorf("unexpected path, got %s len(%d)", p, len(p))
 	}
 }

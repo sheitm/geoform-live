@@ -34,6 +34,13 @@ func (w *writer) writeAll(ctx context.Context, elements []*Element, doneChan cha
 	serviceURL := azblob.NewServiceURL(*u, p)
 	containerURL := serviceURL.NewContainerURL(elements[0].Series)
 
+	err = ensureContainer(ctx, containerURL)
+	if err != nil {
+		w.logChannels.ErrorChan <- err
+		doneChan <- struct{}{}
+		return
+	}
+
 	wg := &sync.WaitGroup{}
 	wg.Add(len(elements))
 

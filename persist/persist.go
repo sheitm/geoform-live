@@ -39,3 +39,11 @@ type Element struct {
 	Data       interface{}
 	PathGetter PathFunc
 }
+
+// Read element used
+type Read struct {
+	Series string
+	Path   string
+	Send   chan<- []byte
+	Done   chan<- struct{}
+}
