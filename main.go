@@ -25,7 +25,7 @@ func main(){
 	eventChan := make(chan *types.ScrapeEvent)
 
 	// Start persistance
-	persister := persist.Start(v, eventChan, logChannels)
+	persister, reader := persist.Start(v, eventChan, logChannels)
 
 	// Start sequencer
 	sequenceTrigger := make(chan interface{})
@@ -38,8 +38,9 @@ func main(){
 	http.Handle("/scrape/", httpHandler)
 
 	// Start athletes
-	athletesHandler := athletes.Start(sequenceAdder, persister, logChannels)
+	athletesHandler := athletes.Start(sequenceAdder, persister, reader, logChannels)
 	httpHandler = telemetry.Wrap(athletesHandler, logChannels)
+	http.Handle("/athletes", httpHandler)
 
 	// Start metrics
 	http.Handle("/metrics", promhttp.Handler())

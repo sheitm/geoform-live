@@ -21,7 +21,7 @@ func (w *writer) writeAll(ctx context.Context, elements []*Element, doneChan cha
 		return
 	}
 
-	credentials, accountName, err := w.credentials()
+	credentials, accountName, err := credentials(w.connectionInfo)
 	if err != nil {
 		w.logChannels.ErrorChan <- err
 		doneChan <- struct{}{}
@@ -67,9 +67,9 @@ func (w *writer) writeAll(ctx context.Context, elements []*Element, doneChan cha
 	doneChan <- struct{}{}
 }
 
-func (w *writer) credentials() (*azblob.SharedKeyCredential, string, error) {
-	accountName := w.connectionInfo["AccountName"]
-	accountKey := w.connectionInfo["AccountKey"]
+func credentials(config map[string]string) (*azblob.SharedKeyCredential, string, error) {
+	accountName := config["AccountName"]
+	accountKey := config["AccountKey"]
 	credentials, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 	if err != nil {
 		return nil, "", err

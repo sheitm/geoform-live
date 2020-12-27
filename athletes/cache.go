@@ -4,7 +4,10 @@ import (
 	"crypto/rand"
 	"crypto/sha1"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"github.com/3lvia/telemetry-go"
+	"github.com/sheitm/ofever/persist"
 	"strings"
 	"sync"
 )
@@ -19,7 +22,16 @@ type athleteWithID struct {
 type cache struct {
 	competitorsBySHA  map[string]*athleteWithID
 	competitorsByGuid map[string]*athleteWithID
+	logChannels       telemetry.LogChans
 	mux               sync.Mutex
+}
+
+func (c *cache) all() []*athleteWithID {
+	var result []*athleteWithID
+	for _, athlete := range c.competitorsBySHA {
+		result = append(result, athlete)
+	}
+	return result
 }
 
 func (c *cache) competitor(name, club string) (*athleteWithID, bool) {
@@ -45,6 +57,40 @@ func (c *cache) competitor(name, club string) (*athleteWithID, bool) {
 	c.competitorsByGuid[a.ID] = a
 
 	return a, false
+}
+
+func (c *cache) init(reader persist.ReadFunc) {
+	c.mux = sync.Mutex{}
+	send := make(chan []byte)
+	done := make(chan struct{})
+	sha := map[string]*athleteWithID{}
+	guid := map[string]*athleteWithID{}
+	r := persist.Read{
+		Series: container,
+		Path:   "",
+		Send:   send,
+		Done:   done,
+	}
+
+	go func(s <-chan []byte) {
+		for {
+			b := <- s
+			var athlete athleteWithID
+			err := json.Unmarshal(b, &athlete)
+			if err != nil {
+				c.logChannels.ErrorChan <- err
+				continue
+			}
+			sha[athlete.SHA] = &athlete
+			guid[athlete.ID] = sha[athlete.SHA]
+		}
+	}(send)
+
+	reader(r)
+
+	<- done
+	c.competitorsBySHA = sha
+	c.competitorsByGuid = guid
 }
 
 func sha(name, club string) string {

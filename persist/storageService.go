@@ -22,13 +22,18 @@ type persistRequest struct {
 	doneChan chan<- struct{}
 }
 
-func newStorageService(v vault.SecretsManager, persistChan <-chan persistRequest, logChannels telemetry.LogChans) (*storageService, error) {
+func newStorageService(
+	v vault.SecretsManager,
+	persistChan <-chan persistRequest,
+	readChan <-chan Read,
+	logChannels telemetry.LogChans) (*storageService, error) {
 	// TODO: Add vault integration
 	cs := os.Getenv("PERSIST_CONNECTIONSTRING")
 	service := &storageService{
 		connectionInfo: parseBlobConnectionString(cs),
 		save:           saveFetch,
 		persistChan:    persistChan,
+		readChan:       readChan,
 		logChannels:    logChannels,
 	}
 	return service, nil
@@ -40,6 +45,7 @@ type storageService struct {
 	connectionInfo map[string]string
 	save           saveFunc
 	persistChan    <-chan persistRequest
+	readChan       <-chan Read
 	logChannels    telemetry.LogChans
 }
 
@@ -55,6 +61,12 @@ func (s *storageService) start(eventChan <-chan *types.ScrapeEvent) {
 				logChannels:    s.logChannels,
 			}
 			w.writeAll(context.Background(), pr.elements, pr.doneChan)
+		case r := <-s.readChan:
+			rdr := &reader{
+				connectionInfo: s.connectionInfo,
+				logChannels:    s.logChannels,
+			}
+			rdr.readAll(context.Background(), r)
 		}
 	}
 }

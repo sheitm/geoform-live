@@ -6,17 +6,21 @@ import (
 	"github.com/sheitm/ofever/persist"
 	"github.com/sheitm/ofever/sequence"
 	"github.com/sheitm/ofever/types"
-	"sync"
 )
 
-func Start(sequenceAdder sequence.Adder, persister persist.Persist, logChannels telemetry.LogChans) telemetry.RequestHandler {
+const container = "athletes"
+
+func Start(
+	sequenceAdder sequence.Adder,
+	persister persist.Persist,
+	reader persist.ReadFunc,
+	logChannels telemetry.LogChans) telemetry.RequestHandler {
 	seasonChan := make(chan *sequence.Event)
 	sequenceAdder(seasonChan)
 	c := &cache{
-		competitorsBySHA:  map[string]*athleteWithID{},
-		competitorsByGuid: map[string]*athleteWithID{},
-		mux:               sync.Mutex{},
+		logChannels: logChannels,
 	}
+	c.init(reader)
 	i := &impl{
 		cache:       c,
 		seasonChan:  seasonChan,
@@ -26,7 +30,10 @@ func Start(sequenceAdder sequence.Adder, persister persist.Persist, logChannels 
 
 	go i.start()
 
-	return &handler{}
+	return &handler{
+		c:           c,
+		logChannels: logChannels,
+	}
 }
 
 type impl struct {
@@ -52,7 +59,7 @@ func (a *impl) start() {
 			a, existed := a.cache.competitor(result.Athlete, result.Club)
 			if !existed {
 				element := &persist.Element{
-					Series:     "athletes",
+					Series:     container,
 					Data:       a,
 					PathGetter: athletePath,
 				}

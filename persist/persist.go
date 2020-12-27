@@ -8,9 +8,10 @@ import (
 )
 
 // Start the internal functionality in a go routine.
-func Start(v vault.SecretsManager, eventChan <-chan *types.ScrapeEvent, logChannels telemetry.LogChans) Persist {
+func Start(v vault.SecretsManager, eventChan <-chan *types.ScrapeEvent, logChannels telemetry.LogChans) (Persist, ReadFunc) {
 	pr := make(chan persistRequest)
-	service, err := newStorageService(v, pr, logChannels)
+	read := make(chan Read)
+	service, err := newStorageService(v, pr, read, logChannels)
 	if err != nil {
 		logChannels.ErrorChan <- err
 		log.Fatal(service)
@@ -18,13 +19,17 @@ func Start(v vault.SecretsManager, eventChan <-chan *types.ScrapeEvent, logChann
 
 	go service.start(eventChan)
 
-	return func(elements []*Element, c chan<- struct{}) {
+	pf := func(elements []*Element, c chan<- struct{}) {
 		pRequest := persistRequest{
 			elements: elements,
 			doneChan: c,
 		}
 		pr <- pRequest
 	}
+	rf := func(r Read) {
+		read <- r
+	}
+	return pf, rf
 }
 
 // PathFunc gets the relative path to which the data should be written.
@@ -33,7 +38,10 @@ type PathFunc func(interface{}) string
 // Persist can be used by client who
 type Persist func([]*Element, chan<- struct{})
 
-// Element represents some instance to be persisted or fetched.
+// ReadFunc used by clients in order to read persisted data.
+type ReadFunc func(Read)
+
+// Element represents some instance to be persisted.
 type Element struct {
 	Series     string
 	Data       interface{}
