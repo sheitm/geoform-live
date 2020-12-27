@@ -17,12 +17,18 @@ const eventSeasonSaved = "Season_saved"
 
 type saveFunc func(context.Context, map[string]string, *types.SeasonFetch) error
 
-func newStorageService(v vault.SecretsManager, logChannels telemetry.LogChans) (*storageService, error) {
+type persistRequest struct {
+	elements []*Element
+	doneChan chan<- struct{}
+}
+
+func newStorageService(v vault.SecretsManager, persistChan <-chan persistRequest, logChannels telemetry.LogChans) (*storageService, error) {
 	// TODO: Add vault integration
 	cs := os.Getenv("PERSIST_CONNECTIONSTRING")
 	service := &storageService{
 		connectionInfo: parseBlobConnectionString(cs),
 		save:           saveFetch,
+		persistChan:    persistChan,
 		logChannels:    logChannels,
 	}
 	return service, nil
@@ -33,30 +39,42 @@ func newStorageService(v vault.SecretsManager, logChannels telemetry.LogChans) (
 type storageService struct {
 	connectionInfo map[string]string
 	save           saveFunc
+	persistChan    <-chan persistRequest
 	logChannels    telemetry.LogChans
 }
 
 func (s *storageService) start(eventChan <-chan *types.ScrapeEvent) {
 	for {
-		e := <- eventChan
-		fetch := e.Fetch
-		err := s.save(context.Background(), s.connectionInfo, fetch)
-
-		if err != nil {
-			s.logChannels.ErrorChan <- err
-			e.DoneChan <- err
-			continue
+		select {
+		case e := <-eventChan:
+			s.handleSeasonEvent(e)
+			e.DoneChan <- nil
+		case pr := <-s.persistChan:
+			w := &writer{
+				connectionInfo: s.connectionInfo,
+				logChannels:    s.logChannels,
+			}
+			w.writeAll(context.Background(), pr.elements, pr.doneChan)
 		}
+	}
+}
 
-		s.logChannels.EventChan <-telemetry.Event{
-			Name: eventSeasonSaved,
-			Data: map[string]string {
-				"series": fetch.Series,
-				"season": fmt.Sprintf("%d", fetch.Year),
-			},
-		}
+func (s *storageService) handleSeasonEvent(e *types.ScrapeEvent) {
+	fetch := e.Fetch
+	err := s.save(context.Background(), s.connectionInfo, fetch)
 
-		e.DoneChan <- nil
+	if err != nil {
+		s.logChannels.ErrorChan <- err
+		e.DoneChan <- err
+		return
+	}
+
+	s.logChannels.EventChan <-telemetry.Event{
+		Name: eventSeasonSaved,
+		Data: map[string]string {
+			"series": fetch.Series,
+			"season": fmt.Sprintf("%d", fetch.Year),
+		},
 	}
 }
 

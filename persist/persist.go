@@ -9,7 +9,8 @@ import (
 
 // Start the internal functionality in a go routine.
 func Start(v vault.SecretsManager, eventChan <-chan *types.ScrapeEvent, logChannels telemetry.LogChans) Persist {
-	service, err := newStorageService(v, logChannels)
+	pr := make(chan persistRequest)
+	service, err := newStorageService(v, pr, logChannels)
 	if err != nil {
 		logChannels.ErrorChan <- err
 		log.Fatal(service)
@@ -18,7 +19,11 @@ func Start(v vault.SecretsManager, eventChan <-chan *types.ScrapeEvent, logChann
 	go service.start(eventChan)
 
 	return func(elements []*Element, c chan<- struct{}) {
-
+		pRequest := persistRequest{
+			elements: elements,
+			doneChan: c,
+		}
+		pr <- pRequest
 	}
 }
 
