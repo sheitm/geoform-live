@@ -34,6 +34,22 @@ func (c *cache) all() []*athleteWithID {
 	return result
 }
 
+func (c *cache) id(name, club string) string {
+	sha := sha(name, club)
+	if a, ok := c.competitorsBySHA[sha]; ok {
+		return a.ID
+	}
+
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	if a, ok := c.competitorsBySHA[sha]; ok {
+		return a.ID
+	}
+
+	return "unknown"
+}
+
 func (c *cache) competitor(name, club string) (*athleteWithID, bool) {
 	sha := sha(name, club)
 	if a, ok := c.competitorsBySHA[sha]; ok {

@@ -5,6 +5,7 @@ import (
 	"github.com/3lvia/telemetry-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sheitm/ofever/athletes"
+	"github.com/sheitm/ofever/competitions"
 	"github.com/sheitm/ofever/persist"
 	"github.com/sheitm/ofever/scrape"
 	"github.com/sheitm/ofever/sequence"
@@ -38,14 +39,17 @@ func main(){
 	http.Handle("/scrape/", httpHandler)
 
 	// Start athletes
-	athletesHandler := athletes.Start(sequenceAdder, persister, reader, logChannels)
+	athletesHandler, athleteIDGetter := athletes.Start(sequenceAdder, persister, reader, logChannels)
 	httpHandler = telemetry.Wrap(athletesHandler, logChannels)
 	http.Handle("/athletes", httpHandler)
 
+	// Start competitions
+	competitionsHandler := competitions.Start(sequenceAdder, athleteIDGetter, persister, logChannels)
+	httpHandler = telemetry.Wrap(competitionsHandler, logChannels)
+	http.Handle("/competitions", httpHandler)
+
 	// Start metrics
 	http.Handle("/metrics", promhttp.Handler())
-
-
 
 	pp := ":" + port
 

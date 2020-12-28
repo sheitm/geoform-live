@@ -17,7 +17,7 @@ type Adder func(chan<- *Event)
 // Start starts the internal sequential processor.
 func Start(trigger <-chan interface{}, doneChan chan<- struct{}) Adder {
 	i := &impl{
-		mutex:    sync.Mutex{},
+		mux:      sync.Mutex{},
 		doneChan: doneChan,
 	}
 	go i.start(trigger)
@@ -27,7 +27,7 @@ func Start(trigger <-chan interface{}, doneChan chan<- struct{}) Adder {
 type impl struct {
 	channels []chan<- *Event
 	doneChan chan<- struct{}
-	mutex sync.Mutex
+	mux      sync.Mutex
 }
 
 func (s *impl) start(trigger <-chan interface{}) {
@@ -47,8 +47,8 @@ func (s *impl) start(trigger <-chan interface{}) {
 }
 
 func (s *impl) add(ch chan<- *Event) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.mux.Lock()
+	defer s.mux.Unlock()
 
 	s.channels = append(s.channels, ch)
 }

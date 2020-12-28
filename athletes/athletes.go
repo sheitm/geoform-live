@@ -10,11 +10,15 @@ import (
 
 const container = "athletes"
 
+// AthleteIDFunc is a function that can convert a name and club into a unique ID,
+type AthleteIDFunc func(name, club string) string
+
+// Start starts the internal functionality in a go routine.
 func Start(
 	sequenceAdder sequence.Adder,
 	persister persist.Persist,
 	reader persist.ReadFunc,
-	logChannels telemetry.LogChans) telemetry.RequestHandler {
+	logChannels telemetry.LogChans) (telemetry.RequestHandler, AthleteIDFunc) {
 
 	seasonChan := make(chan *sequence.Event)
 	sequenceAdder(seasonChan)
@@ -31,10 +35,12 @@ func Start(
 
 	go i.start()
 
-	return &handler{
+	h :=  &handler{
 		c:           c,
 		logChannels: logChannels,
 	}
+
+	return h, c.id
 }
 
 type impl struct {
