@@ -28,7 +28,7 @@ func (r *reader) readAll(ctx context.Context, read Read) {
 	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net", accountName))
 
 	serviceURL := azblob.NewServiceURL(*u, p)
-	containerURL := serviceURL.NewContainerURL(read.Series)
+	containerURL := serviceURL.NewContainerURL(read.Container)
 
 	err = ensureContainer(ctx, containerURL)
 	if err != nil {

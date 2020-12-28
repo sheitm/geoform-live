@@ -19,7 +19,7 @@ func Test_reader_readAll(t *testing.T) {
 	//send := make(chan []byte)
 	//done := make(chan struct{})
 	//read := Read{
-	//	Series: "athletes",
+	//	Container: "athletes",
 	//	Path:   "",
 	//	Send:   send,
 	//	Done:   done,

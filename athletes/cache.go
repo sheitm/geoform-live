@@ -66,10 +66,10 @@ func (c *cache) init(reader persist.ReadFunc) {
 	sha := map[string]*athleteWithID{}
 	guid := map[string]*athleteWithID{}
 	r := persist.Read{
-		Series: container,
-		Path:   "",
-		Send:   send,
-		Done:   done,
+		Container: container,
+		Path:      "",
+		Send:      send,
+		Done:      done,
 	}
 
 	go func(s <-chan []byte) {

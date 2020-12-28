@@ -59,7 +59,7 @@ func (a *impl) start() {
 			a, existed := a.cache.competitor(result.Athlete, result.Club)
 			if !existed {
 				element := &persist.Element{
-					Series:     container,
+					Container:  container,
 					Data:       a,
 					PathGetter: athletePath,
 				}

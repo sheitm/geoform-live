@@ -43,15 +43,15 @@ type ReadFunc func(Read)
 
 // Element represents some instance to be persisted.
 type Element struct {
-	Series     string
+	Container  string
 	Data       interface{}
 	PathGetter PathFunc
 }
 
 // Read element used
 type Read struct {
-	Series string
-	Path   string
-	Send   chan<- []byte
-	Done   chan<- struct{}
+	Container string
+	Path      string
+	Send      chan<- []byte
+	Done      chan<- struct{}
 }

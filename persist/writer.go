@@ -32,7 +32,7 @@ func (w *writer) writeAll(ctx context.Context, elements []*Element, doneChan cha
 	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net", accountName))
 
 	serviceURL := azblob.NewServiceURL(*u, p)
-	containerURL := serviceURL.NewContainerURL(elements[0].Series)
+	containerURL := serviceURL.NewContainerURL(elements[0].Container)
 
 	err = ensureContainer(ctx, containerURL)
 	if err != nil {
