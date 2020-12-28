@@ -15,6 +15,7 @@ func Start(
 	persister persist.Persist,
 	reader persist.ReadFunc,
 	logChannels telemetry.LogChans) telemetry.RequestHandler {
+
 	seasonChan := make(chan *sequence.Event)
 	sequenceAdder(seasonChan)
 	c := &cache{

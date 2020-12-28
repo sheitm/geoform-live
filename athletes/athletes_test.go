@@ -5,8 +5,11 @@ import (
 	"github.com/sheitm/ofever/persist"
 	"github.com/sheitm/ofever/sequence"
 	"github.com/sheitm/ofever/types"
+	"sync"
 	"testing"
 )
+
+const jsonExistingAthlete = `{"id": "1234-567", sha": "p3WN_8Jvg2V-ZHgGYGas19Wrvlg=", "name": "Benny Carlsson", "club": "Sturla"}`
 
 func TestStart(t *testing.T) {
 	// Arrange
@@ -27,8 +30,21 @@ func TestStart(t *testing.T) {
 		go func() {dc <- struct{}{}}()
 	}
 
+	reader := func(r persist.Read) {
+		go func(){
+			wg := &sync.WaitGroup{}
+			wg.Add(1)
+			go func(wg *sync.WaitGroup) {
+				r.Send <- []byte(jsonExistingAthlete)
+				wg.Done()
+			}(wg)
+			wg.Wait()
+			r.Done <- struct{}{}
+		}()
+	}
+
 	// Act
-	Start(sequenceAdder, persister, logChannels)
+	Start(sequenceAdder, persister, reader, logChannels)
 	<- doneChan
 
 	// Assert

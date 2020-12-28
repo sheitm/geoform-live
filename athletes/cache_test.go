@@ -19,6 +19,7 @@ func Test_sha(t *testing.T) {
 		{"2", args{" Ståle Heitmann", "Fossum IF "}, "pOD9F-Ft3jHKmz6JDDCVQKjrYZ8="},
 		{"3", args{"Ståle S. Heitmann", "Fossum IF "}, "yNrDVPtt6qCeQbWZQhdcXXONiF8="},
 		{"4", args{"Ståle S. Heitmann", "O-entusiastene"}, "bud9H6gua4lphxEL4fF0x4IY2yk="},
+		{"5", args{"Benny Carlsson", "Sturla"}, "p3WN_8Jvg2V-ZHgGYGas19Wrvlg="},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
