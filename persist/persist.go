@@ -20,7 +20,7 @@ func Start(v vault.SecretsManager, eventChan <-chan *types.ScrapeEvent, logChann
 	go service.start(eventChan)
 
 	pf := func(elements []*Element, c chan<- struct{}) {
-		pRequest := persistRequest{
+		pRequest := persistRequest {
 			elements: elements,
 			doneChan: c,
 		}

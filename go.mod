@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/3lvia/hn-config-lib-go v1.2.1
-	github.com/3lvia/telemetry-go v0.0.8
+	github.com/3lvia/telemetry-go v0.0.9
 	github.com/Azure/azure-pipeline-go v0.2.3
 	github.com/Azure/azure-storage-blob-go v0.12.0
 	github.com/google/uuid v1.1.2

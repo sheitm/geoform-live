@@ -17,6 +17,12 @@ type writer struct {
 
 func (w *writer) writeAll(ctx context.Context, elements []*Element, doneChan chan<- struct{}) {
 	if elements == nil || len(elements) == 0 {
+		w.logChannels.EventChan <- telemetry.Event{
+			Name: "empty-elements",
+			Data: map[string]string{
+				"package": "persist",
+			},
+		}
 		doneChan <- struct{}{}
 		return
 	}
@@ -53,6 +59,7 @@ func (w *writer) writeAll(ctx context.Context, elements []*Element, doneChan cha
 				return
 			}
 			blobURL := cURL.NewBlockBlobURL(e.PathGetter(e.Data))
+			w.logChannels.DebugChan <- fmt.Sprintf("writing to %s", blobURL.String())
 			_, err = azblob.UploadBufferToBlockBlob(ctx, b, blobURL, azblob.UploadToBlockBlobOptions{})
 			if err != nil {
 				lc.ErrorChan <- err

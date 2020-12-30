@@ -12,6 +12,7 @@ import (
 	"github.com/sheitm/ofever/types"
 	"log"
 	"net/http"
+	"os"
 )
 
 func main(){
@@ -22,7 +23,7 @@ func main(){
 		log.Fatal(err)
 	}
 
-	logChannels := telemetry.StartEmpty()
+	logChannels := telemetry.StartEmpty(telemetry.WithWriter(os.Stdout))
 	eventChan := make(chan *types.ScrapeEvent)
 
 	// Start persistance

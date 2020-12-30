@@ -2,6 +2,7 @@ package competitions
 
 import (
 	"fmt"
+	"github.com/3lvia/telemetry-go"
 	"github.com/sheitm/ofever/athletes"
 	"github.com/sheitm/ofever/persist"
 	"github.com/sheitm/ofever/sequence"
@@ -16,12 +17,23 @@ type impl struct {
 	athleteID   athletes.AthleteIDFunc
 	persistFunc persist.Persist
 	mux         *sync.Mutex
+	logChannels telemetry.LogChans
 }
 
 func (i *impl) start(eventChan <-chan *sequence.Event) {
 	for {
 		e := <- eventChan
 		fetch := e.Payload.(*types.SeasonFetch)
+
+		i.logChannels.EventChan <- telemetry.Event{
+			Name: "received-season",
+			Data: map[string]string{
+				"package": "competitions",
+				"series": fetch.Series,
+				"season": fmt.Sprintf("%d", fetch.Year),
+			},
+		}
+
 		scraped := scrapedCompetitions(fetch)
 		if scraped == nil || len(scraped) == 0 {
 			e.DoneChan <- struct{}{}
@@ -34,7 +46,7 @@ func (i *impl) start(eventChan <-chan *sequence.Event) {
 		compChan := make(chan *comp)
 		for _, event := range scraped {
 			go func(e *types.Event, f *types.SeasonFetch, cc chan<- *comp) {
-				c := i.processScrapedComp(f, event)
+				c := i.processScrapedComp(f, e)
 				cc <- c
 			}(event, fetch, compChan)
 		}
@@ -52,6 +64,7 @@ func (i *impl) start(eventChan <-chan *sequence.Event) {
 					Data:       c,
 					PathGetter: pf,
 				}
+				i.logChannels.DebugChan <- fmt.Sprintf("added perist element with number %d", c.Number)
 				persistElements = append(persistElements, e)
 				wg.Done()
 			}

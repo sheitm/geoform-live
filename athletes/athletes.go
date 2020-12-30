@@ -55,6 +55,15 @@ func (a *impl) start() {
 		e := <- a.seasonChan
 		fetch := e.Payload.(*types.SeasonFetch)
 
+		a.logChannels.EventChan <- telemetry.Event{
+			Name: "received-season",
+			Data: map[string]string{
+				"package": "athletes",
+				"series": fetch.Series,
+				"season": fmt.Sprintf("%d", fetch.Year),
+			},
+		}
+
 		results := athleteResults(fetch)
 		if results == nil {
 			e.DoneChan <- struct{}{}

@@ -21,6 +21,7 @@ func Start(
 		athleteID:   athleteID,
 		persistFunc: persistFunc,
 		mux:         &sync.Mutex{},
+		logChannels: logChannels,
 	}
 	go i.start(seqChan)
 

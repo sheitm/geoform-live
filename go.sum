@@ -17,6 +17,8 @@ github.com/3lvia/hn-config-lib-go v1.2.1 h1:71QU4fISGN3LvpJPCtn7xxrT5xnOz7thCQJ2
 github.com/3lvia/hn-config-lib-go v1.2.1/go.mod h1:moz2AJ0AhrSJYiHFst3nWTo+c800WmXLxAUyTaMkgwY=
 github.com/3lvia/telemetry-go v0.0.8 h1:MMVFk6FQgk5eQmjss5tPf8heFwqjJl+4ORGMoZxM2tM=
 github.com/3lvia/telemetry-go v0.0.8/go.mod h1:hl0xmIHOf2nZW4IW61cHsYoyjw9qey7ZZDco0cGE+nc=
+github.com/3lvia/telemetry-go v0.0.9 h1:DiXv32fQ0TAogfaLlWQy2GcrIm/43fDJ17WO3t7SxOU=
+github.com/3lvia/telemetry-go v0.0.9/go.mod h1:hl0xmIHOf2nZW4IW61cHsYoyjw9qey7ZZDco0cGE+nc=
 github.com/Azure/azure-pipeline-go v0.2.3 h1:7U9HBg1JFK3jHl5qmo4CTZKFTVgMwdFHMVtCdfBE21U=
 github.com/Azure/azure-pipeline-go v0.2.3/go.mod h1:x841ezTBIMG6O3lAcl8ATHnsOPVl2bqk7S3ta6S6u4k=
 github.com/Azure/azure-storage-blob-go v0.12.0 h1:7bFXA1QB+lOK2/ASWHhp6/vnxjaeeZq6t8w1Jyp0Iaw=
