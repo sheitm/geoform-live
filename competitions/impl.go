@@ -42,7 +42,7 @@ func (i *impl) start(eventChan <-chan *sequence.Event) {
 		var persistElements []*persist.Element
 		pf := func(obj interface{}) string {
 			c := obj.(*comp)
-			return fmt.Sprintf("%s/%d.json", c.Season, c.Number)
+			return fmt.Sprintf("%s/competitions/%d.json", c.Season, c.Number)
 		}
 		go func(f *types.SeasonFetch, cc <-chan *comp, pf persist.PathFunc, wg *sync.WaitGroup) {
 			for {

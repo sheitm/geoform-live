@@ -47,7 +47,7 @@ func TestStart(t *testing.T) {
 		t.Errorf("unexpected container, got %s", re.Container)
 	}
 	p := re.PathGetter(re.Data)
-	if p != "2020/1.json" {
+	if p != "2020/competitions/1.json" {
 		t.Errorf("unexpected path, got %s", p)
 	}
 }
