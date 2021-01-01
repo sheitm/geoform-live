@@ -8,6 +8,7 @@ import (
 	"github.com/Azure/azure-pipeline-go/pipeline"
 	"github.com/Azure/azure-storage-blob-go/azblob"
 	"net/url"
+	"regexp"
 	"sync"
 )
 
@@ -37,6 +38,11 @@ func (r *reader) readAll(ctx context.Context, read Read) {
 		return
 	}
 
+	var rgx *regexp.Regexp
+	if read.Regex != "" {
+		rgx = regexp.MustCompile(read.Regex)
+	}
+
 	var blobReferences []string
 	for marker := (azblob.Marker{}); marker.NotDone(); {
 		listBlob, err := containerURL.ListBlobsFlatSegment(ctx, marker, azblob.ListBlobsSegmentOptions{})
@@ -49,8 +55,11 @@ func (r *reader) readAll(ctx context.Context, read Read) {
 		marker = listBlob.NextMarker
 
 		for _, blobInfo := range listBlob.Segment.BlobItems {
-			bi := listBlob.ServiceEndpoint + listBlob.ContainerName + "/" + blobInfo.Name
-			blobReferences = append(blobReferences, bi)
+			if rgx == nil || rgx.Match([]byte(blobInfo.Name)) {
+				bi := listBlob.ServiceEndpoint + listBlob.ContainerName + "/" + blobInfo.Name
+				blobReferences = append(blobReferences, bi)
+			}
+
 		}
 	}
 

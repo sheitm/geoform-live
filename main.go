@@ -45,7 +45,7 @@ func main(){
 	http.Handle("/athletes", httpHandler)
 
 	// Start competitions
-	competitionsHandler := competitions.Start(sequenceAdder, athleteIDGetter, persister, containerReader, logChannels)
+	competitionsHandler := competitions.Start(sequenceAdder, athleteIDGetter, persister, reader, containerReader, logChannels)
 	httpHandler = telemetry.Wrap(competitionsHandler, logChannels)
 	http.Handle("/competitions", httpHandler)
 

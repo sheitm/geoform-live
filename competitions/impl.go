@@ -1,6 +1,7 @@
 package competitions
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/3lvia/telemetry-go"
 	"github.com/sheitm/ofever/athletes"
@@ -12,6 +13,8 @@ import (
 	"time"
 )
 
+const regexCompetitions = `[0-9]{4}/competitions/[0-9]*.json`
+
 type impl struct {
 	comps              map[string]*comp
 	athleteID          athletes.AthleteIDFunc
@@ -20,8 +23,8 @@ type impl struct {
 	logChannels        telemetry.LogChans
 }
 
-func (i *impl) start(eventChan <-chan *sequence.Event, readContainersFunc persist.ReadContainersFunc) {
-	i.init(readContainersFunc)
+func (i *impl) start(eventChan <-chan *sequence.Event, reader persist.ReadFunc, readContainersFunc persist.ReadContainersFunc) {
+	i.init(readContainersFunc, reader)
 	for {
 		e := <- eventChan
 		fetch := e.Payload.(*types.SeasonFetch)
@@ -82,12 +85,59 @@ func (i *impl) start(eventChan <-chan *sequence.Event, readContainersFunc persis
 	}
 }
 
-func (i *impl) init(readContainersFunc persist.ReadContainersFunc) {
+func (i *impl) init(readContainersFunc persist.ReadContainersFunc, reader persist.ReadFunc) {
 	rcc := make(chan []string)
 	readContainersFunc(persist.ReadContainers{Send: rcc})
 	containers := <- rcc
-	x := len(containers)
-	_ = x
+	var readContainers []string
+	for _, container := range containers {
+		if container == "athletes" {
+			continue
+		}
+		readContainers = append(readContainers, container)
+	}
+
+	wg := &sync.WaitGroup{}
+	wg.Add(len(readContainers))
+
+	for _, container := range readContainers {
+		go func(c string, rdr persist.ReadFunc, wg *sync.WaitGroup){
+			send := make(chan persist.ReadResult)
+			done := make(chan struct{})
+			r := persist.Read{
+				Container: c,
+				Regex:     regexCompetitions,
+				Send:      send,
+				Done:      done,
+			}
+			go func(s <-chan persist.ReadResult) {
+				for {
+					b := <- s
+					var co comp
+					err := json.Unmarshal(b.Data, &co)
+					if err != nil {
+						i.logChannels.ErrorChan <- err
+						continue
+					}
+					i.add(&co)
+				}
+
+			}(send)
+			rdr(r)
+			<- done
+			wg.Done()
+		}(container, reader, wg)
+	}
+
+	wg.Wait()
+
+	i.logChannels.EventChan <- telemetry.Event{
+		Name: "initialized",
+		Data: map[string]string{
+			"package": "competitions",
+			"count": fmt.Sprintf("%d", len(i.comps)),
+		},
+	}
 }
 
 func (i *impl) processScrapedComp(fetch *types.SeasonFetch, sc *types.Event) *comp {

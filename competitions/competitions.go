@@ -12,6 +12,7 @@ func Start(
 	add sequence.Adder,
 	athleteID athletes.AthleteIDFunc,
 	persistFunc persist.Persist,
+	reader persist.ReadFunc,
 	readContainersFunc persist.ReadContainersFunc,
 	logChannels telemetry.LogChans) telemetry.RequestHandler {
 	seqChan := make(chan *sequence.Event)
@@ -24,7 +25,7 @@ func Start(
 		mux:                &sync.Mutex{},
 		logChannels:        logChannels,
 	}
-	go i.start(seqChan, readContainersFunc)
+	go i.start(seqChan, reader, readContainersFunc)
 
 	return nil
 }

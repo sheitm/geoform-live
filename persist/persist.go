@@ -61,7 +61,7 @@ type Element struct {
 // Read element used
 type Read struct {
 	Container string
-	Path      string
+	Regex     string
 	Send      chan<- ReadResult
 	Done      chan<- struct{}
 }

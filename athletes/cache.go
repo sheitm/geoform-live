@@ -83,7 +83,7 @@ func (c *cache) init(reader persist.ReadFunc) {
 	guid := map[string]*athleteWithID{}
 	r := persist.Read{
 		Container: container,
-		Path:      "",
+		Regex:     regexAthletesFile,
 		Send:      send,
 		Done:      done,
 	}
@@ -107,6 +107,14 @@ func (c *cache) init(reader persist.ReadFunc) {
 	<- done
 	c.competitorsBySHA = sha
 	c.competitorsByGuid = guid
+
+	c.logChannels.EventChan <- telemetry.Event{
+		Name: "initialized",
+		Data: map[string]string{
+			"package": "athletes",
+			"count": fmt.Sprintf("%d", len(sha)),
+		},
+	}
 }
 
 func sha(name, club string) string {

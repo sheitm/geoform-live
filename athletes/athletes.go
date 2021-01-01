@@ -8,7 +8,10 @@ import (
 	"github.com/sheitm/ofever/types"
 )
 
-const container = "athletes"
+const (
+	container = "athletes"
+	regexAthletesFile = `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}.json`
+)
 
 // AthleteIDFunc is a function that can convert a name and club into a unique ID,
 type AthleteIDFunc func(name, club string) string
