@@ -13,14 +13,15 @@ import (
 )
 
 type impl struct {
-	comps       map[string]*comp
-	athleteID   athletes.AthleteIDFunc
-	persistFunc persist.Persist
-	mux         *sync.Mutex
-	logChannels telemetry.LogChans
+	comps              map[string]*comp
+	athleteID          athletes.AthleteIDFunc
+	persistFunc        persist.Persist
+	mux                *sync.Mutex
+	logChannels        telemetry.LogChans
 }
 
-func (i *impl) start(eventChan <-chan *sequence.Event) {
+func (i *impl) start(eventChan <-chan *sequence.Event, readContainersFunc persist.ReadContainersFunc) {
+	i.init(readContainersFunc)
 	for {
 		e := <- eventChan
 		fetch := e.Payload.(*types.SeasonFetch)
@@ -79,6 +80,14 @@ func (i *impl) start(eventChan <-chan *sequence.Event) {
 
 		e.DoneChan <- struct{}{}
 	}
+}
+
+func (i *impl) init(readContainersFunc persist.ReadContainersFunc) {
+	rcc := make(chan []string)
+	readContainersFunc(persist.ReadContainers{Send: rcc})
+	containers := <- rcc
+	x := len(containers)
+	_ = x
 }
 
 func (i *impl) processScrapedComp(fetch *types.SeasonFetch, sc *types.Event) *comp {

@@ -57,8 +57,8 @@ func (r *reader) readAll(ctx context.Context, read Read) {
 	wg := &sync.WaitGroup{}
 	wg.Add(len(blobReferences))
 
-	proxy := make(chan []byte)
-	go func(rr <-chan []byte, sr chan<- []byte, wg *sync.WaitGroup){
+	proxy := make(chan ReadResult)
+	go func(rr <-chan ReadResult, sr chan<- ReadResult, wg *sync.WaitGroup){
 		for {
 			bb := <-rr
 			sr <- bb
@@ -74,7 +74,34 @@ func (r *reader) readAll(ctx context.Context, read Read) {
 	read.Done <- struct{}{}
 }
 
-func readBlob(ctx context.Context, ref string, p pipeline.Pipeline, ch chan<- []byte) {
+func (r *reader) readContainers(ctx context.Context, rc ReadContainers){
+	credentials, accountName, err := credentials(r.connectionInfo)
+	if err != nil {
+		r.logChannels.ErrorChan <- err
+		rc.Send <- nil
+		return
+	}
+	p := azblob.NewPipeline(credentials, azblob.PipelineOptions{})
+	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net", accountName))
+
+	var containers []string
+	serviceURL := azblob.NewServiceURL(*u, p)
+	for marker := (azblob.Marker{}); marker.NotDone(); {
+		resp, err := serviceURL.ListContainersSegment(ctx, marker, azblob.ListContainersSegmentOptions{})
+		if err != nil {
+			r.logChannels.ErrorChan <- err
+			rc.Send <- nil
+			return
+		}
+		for _, item := range resp.ContainerItems {
+			containers = append(containers, item.Name)
+		}
+		marker = resp.NextMarker
+	}
+	rc.Send <- containers
+}
+
+func readBlob(ctx context.Context, ref string, p pipeline.Pipeline, ch chan<- ReadResult) {
 	u, err := url.Parse(ref)
 	if err != nil {
 		//log.Fatal(err)
@@ -92,5 +119,8 @@ func readBlob(ctx context.Context, ref string, p pipeline.Pipeline, ch chan<- []
 	downloadedData := &bytes.Buffer{}
 	downloadedData.ReadFrom(responseBody)
 
-	ch <- downloadedData.Bytes()
+	ch <- ReadResult{
+		Path: blobURL.String(),
+		Data: downloadedData.Bytes(),
+	}
 }

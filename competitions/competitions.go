@@ -12,18 +12,19 @@ func Start(
 	add sequence.Adder,
 	athleteID athletes.AthleteIDFunc,
 	persistFunc persist.Persist,
+	readContainersFunc persist.ReadContainersFunc,
 	logChannels telemetry.LogChans) telemetry.RequestHandler {
 	seqChan := make(chan *sequence.Event)
 	add(seqChan)
 
 	i := &impl{
-		comps:       map[string]*comp{},
-		athleteID:   athleteID,
-		persistFunc: persistFunc,
-		mux:         &sync.Mutex{},
-		logChannels: logChannels,
+		comps:              map[string]*comp{},
+		athleteID:          athleteID,
+		persistFunc:        persistFunc,
+		mux:                &sync.Mutex{},
+		logChannels:        logChannels,
 	}
-	go i.start(seqChan)
+	go i.start(seqChan, readContainersFunc)
 
 	return nil
 }

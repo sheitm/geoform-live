@@ -35,7 +35,7 @@ func TestStart(t *testing.T) {
 			wg := &sync.WaitGroup{}
 			wg.Add(1)
 			go func(wg *sync.WaitGroup) {
-				r.Send <- []byte(jsonExistingAthlete)
+				r.Send <- persist.ReadResult{Data: []byte(jsonExistingAthlete)}
 				wg.Done()
 			}(wg)
 			wg.Wait()

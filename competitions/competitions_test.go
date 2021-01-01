@@ -26,10 +26,13 @@ func TestStart(t *testing.T) {
 		receivedElements = elements
 		go func(){doneChan <- struct{}{}}()
 	}
+
+	readContainers := func(rc persist.ReadContainers) {}
+
 	logChannels := telemetry.StartEmpty()
 
 	// Act
-	Start(sequenceAdder, athleteID, persistFunc, logChannels)
+	Start(sequenceAdder, athleteID, persistFunc, readContainers, logChannels)
 	doneChan := make(chan struct{})
 	e := &sequence.Event{
 		Payload:  fetch(series, year),

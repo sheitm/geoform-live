@@ -77,7 +77,7 @@ func (c *cache) competitor(name, club string) (*athleteWithID, bool) {
 
 func (c *cache) init(reader persist.ReadFunc) {
 	c.mux = sync.Mutex{}
-	send := make(chan []byte)
+	send := make(chan persist.ReadResult)
 	done := make(chan struct{})
 	sha := map[string]*athleteWithID{}
 	guid := map[string]*athleteWithID{}
@@ -88,11 +88,11 @@ func (c *cache) init(reader persist.ReadFunc) {
 		Done:      done,
 	}
 
-	go func(s <-chan []byte) {
+	go func(s <-chan persist.ReadResult) {
 		for {
 			b := <- s
 			var athlete athleteWithID
-			err := json.Unmarshal(b, &athlete)
+			err := json.Unmarshal(b.Data, &athlete)
 			if err != nil {
 				c.logChannels.ErrorChan <- err
 				continue
