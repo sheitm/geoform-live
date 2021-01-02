@@ -27,12 +27,24 @@ func TestStart(t *testing.T) {
 		go func(){doneChan <- struct{}{}}()
 	}
 
-	readContainers := func(rc persist.ReadContainers) {}
+	var receivedInitContainers []string
+	readFunc := func(r persist.Read){
+		go func() {
+			receivedInitContainers = append(receivedInitContainers, r.Container)
+			r.Done <- struct{}{}
+		}()
+	}
+
+	readContainers := func(rc persist.ReadContainers) {
+		go func() {
+			rc.Send <- []string{"athletes", "geoform"}
+		}()
+	}
 
 	logChannels := telemetry.StartEmpty()
 
 	// Act
-	Start(sequenceAdder, athleteID, persistFunc, readContainers, logChannels)
+	Start(sequenceAdder, athleteID, persistFunc, readFunc, readContainers, logChannels)
 	doneChan := make(chan struct{})
 	e := &sequence.Event{
 		Payload:  fetch(series, year),
@@ -52,6 +64,13 @@ func TestStart(t *testing.T) {
 	p := re.PathGetter(re.Data)
 	if p != "2020/competitions/1.json" {
 		t.Errorf("unexpected path, got %s", p)
+	}
+
+	if len(receivedInitContainers) != 1 {
+		t.Errorf("expected to receive 1 init container, got %d", len(receivedInitContainers))
+	}
+	if receivedInitContainers[0] != "geoform" {
+		t.Errorf("unexpected container received, got %s", receivedInitContainers[0])
 	}
 }
 
