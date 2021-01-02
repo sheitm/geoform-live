@@ -9,6 +9,7 @@ import (
 	"github.com/sheitm/ofever/sequence"
 	"github.com/sheitm/ofever/types"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -188,8 +189,42 @@ func (i *impl) add(c *comp) {
 	i.mux.Lock()
 	defer i.mux.Unlock()
 
-	k := fmt.Sprintf("%s/%s/%d", c.Series, c.Season, c.Number)
+	k := compKey(c.Series, c.Season, c.Number)
 	i.comps[k] = c
+}
+
+func (i *impl) get(series, season string, number int) *comp {
+	k := compKey(series, season, number)
+	if c, ok := i.comps[k]; ok {
+		return c
+	}
+	return nil
+}
+
+func (i *impl) getAll(series, season string) []*comp {
+	i.mux.Lock()
+	defer i.mux.Unlock()
+
+	pk := partialCompKey(series, season)
+	var comps []*comp
+
+	for k, c := range i.comps {
+		if len(k) < len(pk) {
+			continue
+		}
+		if k[0:len(pk)] == pk {
+			comps = append(comps, c)
+		}
+	}
+	return comps
+}
+
+func compKey(series, season string, number int) string {
+	return fmt.Sprintf("%s%d", partialCompKey(series, season), number)
+}
+
+func partialCompKey(series, season string) string {
+	return fmt.Sprintf("%s/%s/", strings.ToLower(series), strings.ToLower(season))
 }
 
 func  scrapedCompetitions(fetch *types.SeasonFetch) []*types.Event  {

@@ -47,7 +47,7 @@ func main(){
 	// Start competitions
 	competitionsHandler := competitions.Start(sequenceAdder, athleteIDGetter, persister, reader, containerReader, logChannels)
 	httpHandler = telemetry.Wrap(competitionsHandler, logChannels)
-	http.Handle("/competitions", httpHandler)
+	http.Handle("/competitions/", httpHandler)
 
 	// Start metrics
 	http.Handle("/metrics", promhttp.Handler())

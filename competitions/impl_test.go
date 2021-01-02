@@ -1,6 +1,7 @@
 package competitions
 
 import (
+	"sync"
 	"testing"
 	"time"
 )
@@ -31,5 +32,30 @@ func Test_getElapsedTimeInfo(t *testing.T) {
 				t.Errorf("getElapsedTimeInfo() got1 = %v, want %v", got1, tt.want1)
 			}
 		})
+	}
+}
+
+func Test_impl_getAll(t *testing.T) {
+	// Arrange
+	comps := []*comp {
+		&comp{Series: "GEoFOrm", Season: "2020", Number: 1, Name: "1"},
+		&comp{Series: "geoform", Season: "2020", Number: 2, Name: "2"},
+		&comp{Series: "geoform", Season: "2019", Number: 12, Name: "12"},
+	}
+
+	i := &impl{
+		comps: map[string]*comp{},
+		mux:   &sync.Mutex{},
+	}
+	for _, c := range comps {
+		i.add(c)
+	}
+
+	// Act
+	cs := i.getAll("GEOFORM", "2020")
+
+	// Assert
+	if len(cs) != 2 {
+		t.Errorf("expected 2 comps, got %d", len(cs))
 	}
 }

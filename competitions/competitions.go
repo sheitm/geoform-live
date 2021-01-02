@@ -27,5 +27,9 @@ func Start(
 	}
 	go i.start(seqChan, reader, readContainersFunc)
 
-	return nil
+	h := &handler {
+		get: i.get,
+		getAll: i.getAll,
+	}
+	return h
 }
