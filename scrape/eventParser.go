@@ -3,7 +3,7 @@ package scrape
 
 import (
 	"fmt"
-	"github.com/sheitm/ofever/contracts"
+	"github.com/sheitm/ofever/types"
 	"regexp"
 	"strconv"
 	"strings"
@@ -32,8 +32,8 @@ var regexClubContamination = regexp.MustCompile(regexPatternClubContamination)
 
 type eventTableParser struct {}
 
-func (p *eventTableParser) parse(columns, s string) ([]*contracts.Result, error) {
-	var res []*contracts.Result
+func (p *eventTableParser) parse(columns, s string) ([]*types.Result, error) {
+	var res []*types.Result
 
 	lines := getRawResultLines(s)
 	for _, line := range lines {
@@ -47,9 +47,9 @@ func (p *eventTableParser) parse(columns, s string) ([]*contracts.Result, error)
 	return res, nil
 }
 
-func getResultFromLine(line string) (*contracts.Result, error) {
+func getResultFromLine(line string) (*types.Result, error) {
 	w := getWords(line)
-	r := &contracts.Result{}
+	r := &types.Result{}
 
 
 	points, err := getPoints(line)

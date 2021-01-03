@@ -2,16 +2,16 @@ package scrape
 
 import (
 	"fmt"
-	"github.com/sheitm/ofever/contracts"
+	"github.com/sheitm/ofever/types"
 	"golang.org/x/net/html"
 	"net/http"
 	"strings"
 )
 
-func startEventScrape(row *tableRow,  resultChan chan<- *Result, client *http.Client) {
-	go func(row *tableRow, resultChan chan<- *Result, client *http.Client) {
+func startEventScrape(row *tableRow,  resultChan chan<- *types.ScrapeResult, client *http.Client) {
+	go func(row *tableRow, resultChan chan<- *types.ScrapeResult, client *http.Client) {
 		url := row.eventURL()
-		res := &Result{URL: url}
+		res := &types.ScrapeResult{URL: url}
 		scraper := &eventScraper{
 			client: &http.Client{},
 			row:    row,
@@ -30,7 +30,7 @@ type eventScraper struct {
 	row    *tableRow
 }
 
-func (s *eventScraper) Scrape(url string) (*contracts.Event, error) {
+func (s *eventScraper) Scrape(url string) (*types.Event, error) {
 	resp, err := s.client.Get(url)
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func (s *eventScraper) Scrape(url string) (*contracts.Event, error) {
 		return nil, err
 	}
 
-	event := &contracts.Event{
+	event := &types.Event{
 		URL:        url,
 		Number:     s.row.number(),
 		URLInvite:  s.row.urlInvite(),
@@ -85,7 +85,7 @@ func (s *eventScraper) Scrape(url string) (*contracts.Event, error) {
 				if err != nil {
 					parserErrorText = err.Error()
 				}
-				course := &contracts.Course{
+				course := &types.Course{
 					Name:       nextCourseName,
 					Info:       "",
 					Results:    results,

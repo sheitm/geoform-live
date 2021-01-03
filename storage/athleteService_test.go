@@ -2,13 +2,13 @@ package storage
 
 import (
 	"encoding/json"
-	"github.com/sheitm/ofever/scrape"
+	"github.com/sheitm/ofever/types"
 	"testing"
 )
 
 func Test_athleteServiceImpl_Start(t *testing.T) {
 	// Arrange
-	var f scrape.SeasonFetch
+	var f types.SeasonFetch
 	err := json.Unmarshal([]byte(jsonSeason2019), &f)
 	if err != nil {
 		t.Errorf("unexpected error when unmarshaling json, %v", err)
@@ -25,7 +25,7 @@ func Test_athleteServiceImpl_Start(t *testing.T) {
 	service := newAthleteService(persist, fetch)
 
 	element := seasonSyncElement{
-		seasonChan: make(chan *scrape.SeasonFetch),
+		seasonChan: make(chan *types.SeasonFetch),
 		doneChan:   make(chan struct{}),
 	}
 

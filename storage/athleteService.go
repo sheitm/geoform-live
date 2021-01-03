@@ -2,7 +2,7 @@ package storage
 
 import (
 	"github.com/google/uuid"
-	"github.com/sheitm/ofever/scrape"
+	"github.com/sheitm/ofever/types"
 	"log"
 	"sync"
 )
@@ -32,7 +32,7 @@ type athleteServiceImpl struct {
 }
 
 func (a *athleteServiceImpl) Start(element seasonSyncElement){
-	go func(sc <-chan *scrape.SeasonFetch, dc chan<- struct{}){
+	go func(sc <-chan *types.SeasonFetch, dc chan<- struct{}){
 		for {
 			fetch := <-sc
 			anyChange := false

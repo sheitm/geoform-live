@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"github.com/sheitm/ofever/types"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -14,7 +15,7 @@ func Test_startSeason_statusCode500(t *testing.T) {
 	defer server.Close()
 
 	url := server.URL + "/rankinglop"
-	resultChan := make(chan *SeasonFetch)
+	resultChan := make(chan *types.SeasonFetch)
 
 	// Act
 	startSeason(url, 2020, resultChan, server.Client())
@@ -48,7 +49,7 @@ func Test_startSeason_success(t *testing.T) {
 	defer server.Close()
 
 	url := server.URL + "/rankinglop"
-	resultChan := make(chan *SeasonFetch)
+	resultChan := make(chan *types.SeasonFetch)
 
 	// Act
 	startSeason(url, 2020, resultChan, server.Client())

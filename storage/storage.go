@@ -2,7 +2,7 @@ package storage
 
 import (
 	"encoding/json"
-	"github.com/sheitm/ofever/scrape"
+	"github.com/sheitm/ofever/types"
 	"net/http"
 )
 
@@ -10,7 +10,7 @@ var handlers []httpHandler
 
 // Start starts the internal functionality that reacts on incoming scraped seasons via the channel seasonChan. Also
 // necessary internal wire up, sp that this method should be invoked before using this package.
-func Start(storageFolder string, seasonChan <-chan *scrape.SeasonFetch) {
+func Start(storageFolder string, seasonChan <-chan *types.SeasonFetch) {
 	sequenceHandler := &sequentialSeasonHandlers{}
 
 	currentStorageService := newStorageService(storageFolder)
@@ -55,7 +55,7 @@ func getComputedSeasonsFunctions(currentStorageService storageService, folder st
 		}
 		var res []*computedSeason
 		for _, c := range contents {
-			var scrapedFetch scrape.SeasonFetch
+			var scrapedFetch types.SeasonFetch
 			err := json.Unmarshal([]byte(c), &scrapedFetch)
 			if err != nil {
 				return nil, err

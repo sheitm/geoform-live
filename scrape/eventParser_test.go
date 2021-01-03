@@ -2,7 +2,7 @@ package scrape
 
 import (
 	"fmt"
-	"github.com/sheitm/ofever/contracts"
+	"github.com/sheitm/ofever/types"
 	"reflect"
 	"testing"
 	"time"
@@ -22,7 +22,7 @@ func Test_eventTableParser_parse(t *testing.T) {
 	if len(results) != 49 {
 		t.Errorf("expected 49 result lines, got %d", len(results))
 	}
-	var result *contracts.Result
+	var result *types.Result
 	for _, r := range results {
 		if r.Athlete == "Heir, Morten" {
 			result = r
@@ -77,7 +77,7 @@ func Test_eventTableParser_parse_nonstandard2019(t *testing.T) {
 		t.Errorf("expected 25 results, got %d", len(results))
 	}
 
-	var result *contracts.Result
+	var result *types.Result
 	for _, r := range results {
 		if r.Placement == 1 {
 			result = r
@@ -123,13 +123,13 @@ func Test_getResultFromLine(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *contracts.Result
+		want    *types.Result
 		wantErr bool
 	}{
 		{
 			name:    "Kostylev",
 			args:    args{line:"1    Kostylev, Jegor               Mora                      0:43:46 +  00:00      151.28"},
-			want:    &contracts.Result{
+			want:    &types.Result{
 				Placement:       1,
 				Disqualified:    false,
 				Athlete:         "Kostylev, Jegor",
@@ -143,7 +143,7 @@ func Test_getResultFromLine(t *testing.T) {
 		{
 			name: "Blom-hagen",
 			args: args{line: "4    Blom-hagen, Torbjørn          Fossum IF                 0:47:57 +  04:11      149.01"},
-			want:    &contracts.Result{
+			want:    &types.Result{
 				Placement:       4,
 				Disqualified:    false,
 				Athlete:         "Blom-hagen, Torbjørn",
@@ -157,7 +157,7 @@ func Test_getResultFromLine(t *testing.T) {
 		{
 			name: "Vister",
 			args: args{line: "28    Vister, Hanne Maria                                     1:05:07 +  21:21      139.71"},
-			want:    &contracts.Result{
+			want:    &types.Result{
 				Placement:       28,
 				Disqualified:    false,
 				Athlete:         "Vister, Hanne Maria",
@@ -171,7 +171,7 @@ func Test_getResultFromLine(t *testing.T) {
 		{
 			name: "Hjelm",
 			args: args{line: "DSQ   Hjelm, Morten                 VBIL                      0:59:12  (-1 poster)  95.00"},
-			want:    &contracts.Result{
+			want:    &types.Result{
 				Placement:       0,
 				Disqualified:    true,
 				Athlete:         "Hjelm, Morten",
@@ -185,7 +185,7 @@ func Test_getResultFromLine(t *testing.T) {
 		{
 			name: "Feiring",
 			args: args{line: "      Feiring, Hege                 IL Tyrving                DELTATT               50.00"},
-			want:    &contracts.Result{
+			want:    &types.Result{
 				Placement:       0,
 				Disqualified:    true,
 				Athlete:         "Feiring, Hege",
@@ -199,7 +199,7 @@ func Test_getResultFromLine(t *testing.T) {
 		{
 			name: "Hobæk",
 			args: args{line: "65    Hobæk, Thor                   Gassecure BIL             2:03:41 +1:19:33      108.99"},
-			want:    &contracts.Result{
+			want:    &types.Result{
 				Placement:       65,
 				Disqualified:    false,
 				Athlete:         "Hobæk, Thor",
@@ -213,7 +213,7 @@ func Test_getResultFromLine(t *testing.T) {
 		{
 			name: "Blom",
 			args: args{line: "26    Blom, Richard                 FBI - Forskningsbedriftenes bedriftsidrettslag0:48:07 +  15:10      128.47"},
-			want:    &contracts.Result{
+			want:    &types.Result{
 				Placement:       26,
 				Disqualified:    false,
 				Athlete:         "Blom, Richard",

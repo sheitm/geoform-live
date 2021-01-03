@@ -3,7 +3,7 @@ package storage
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/sheitm/ofever/scrape"
+	"github.com/sheitm/ofever/types"
 	"io/ioutil"
 	"log"
 	"os"
@@ -56,11 +56,11 @@ func (s *storageServiceImpl) ReadFolder(folder, filePattern string) ([]string, e
 }
 
 func (s *storageServiceImpl) Start(element seasonSyncElement) {
-	go func(sc <-chan *scrape.SeasonFetch, dc chan<- struct{}) {
+	go func(sc <-chan *types.SeasonFetch, dc chan<- struct{}) {
 		for {
 			fetch := <- sc
 			fn := func(obj interface{}) string {
-				f := obj.(*scrape.SeasonFetch)
+				f := obj.(*types.SeasonFetch)
 				return fmt.Sprintf("season_%d.json", f.Year)
 			}
 			err := s.Store(fetch, fn)

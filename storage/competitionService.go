@@ -3,8 +3,7 @@ package storage
 import (
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/sheitm/ofever/contracts"
-	"github.com/sheitm/ofever/scrape"
+	"github.com/sheitm/ofever/types"
 	"log"
 	"regexp"
 	"strconv"
@@ -44,7 +43,7 @@ type competitionServiceImpl struct {
 }
 
 func (c *competitionServiceImpl) Start(element seasonSyncElement) {
-	go func(sc <-chan *scrape.SeasonFetch, dc chan<- struct{}){
+	go func(sc <-chan *types.SeasonFetch, dc chan<- struct{}){
 		for {
 			fetch := <- sc
 			anyChange := false
@@ -131,7 +130,7 @@ func makeCompetitionID(dt time.Time) string {
 	return fmt.Sprintf("%d%02d%02d-%s", dt.Year(), dt.Month(), dt.Day(), guid.String()[0:4])
 }
 
-func getCompetition(id string, e *contracts.Event) *competition {
+func getCompetition(id string, e *types.Event) *competition {
 	comp := &competition{
 		ID:          id,
 		Number:      e.Number,
