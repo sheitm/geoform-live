@@ -11,7 +11,7 @@ import (
 const handlerName = "competitions"
 
 type getCompFunc func(series, season string, number int) *comp
-type getAllCompsFunc func(series, season string) []*comp
+type getAllCompsFunc func(series, season string) []*compHeader
 
 type handler struct {
 	get    getCompFunc

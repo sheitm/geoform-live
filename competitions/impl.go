@@ -201,19 +201,25 @@ func (i *impl) get(series, season string, number int) *comp {
 	return nil
 }
 
-func (i *impl) getAll(series, season string) []*comp {
+func (i *impl) getAll(series, season string) []*compHeader {
 	i.mux.Lock()
 	defer i.mux.Unlock()
 
 	pk := partialCompKey(series, season)
-	var comps []*comp
+	var comps []*compHeader
 
 	for k, c := range i.comps {
 		if len(k) < len(pk) {
 			continue
 		}
 		if k[0:len(pk)] == pk {
-			comps = append(comps, c)
+			ch := &compHeader{
+				Series: c.Series,
+				Season: c.Season,
+				Number: c.Number,
+				Name:   c.Name,
+			}
+			comps = append(comps, ch)
 		}
 	}
 	return comps

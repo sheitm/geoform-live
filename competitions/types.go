@@ -2,6 +2,13 @@ package competitions
 
 import "time"
 
+type compHeader struct {
+	Series string `json:"series"`
+	Season string `json:"season"`
+	Number int    `json:"number"`
+	Name   string `json:"name"`
+}
+
 type comp struct {
 	Series string `json:"series"`
 	Season string `json:"season"`

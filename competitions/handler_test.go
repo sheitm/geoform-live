@@ -84,7 +84,7 @@ func Test_handler_Handle_single_malformedURL(t *testing.T) {
 
 func Test_handler_Handle_all(t *testing.T) {
 	// Arrange
-	expectedBody := `[{"series":"geoform","season":"2020","number":1,"name":"Name","url_live_lox":"","courses":null,"week_day":"","date":"0001-01-01T00:00:00Z","place":"","organizer":"","responsible":""}]`
+	expectedBody := `[{"series":"geoform","season":"2020","number":1,"name":"Name"}]`
 	buf := new(bytes.Buffer)
 	logChannels := telemetry.StartEmpty(telemetry.WithWriter(buf))
 	req, err := http.NewRequest("GET", "/competitions/geoform/2020", nil)
@@ -92,10 +92,10 @@ func Test_handler_Handle_all(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	getAll := func(series, season string) []*comp {
+	getAll := func(series, season string) []*compHeader {
 		if series == "geoform" && season == "2020" {
-			return []*comp{
-				&comp{
+			return []*compHeader{
+				&compHeader{
 					Series: series,
 					Season: season,
 					Number: 1,
